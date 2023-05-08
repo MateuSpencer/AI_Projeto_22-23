@@ -7,6 +7,7 @@
 # 00000 Nome2
 
 import sys
+import numpy as np
 from search import (
     Problem,
     Node,
@@ -56,19 +57,32 @@ class Board:
     def parse_instance():
         """Lê o test do standard input (stdin) que é passado como argumento
         e retorna uma instância da classe Board.
-
-        Por exemplo:
-            $ python3 bimaru.py < input_T01
-
-            > from sys import stdin
-            > line = stdin.readline().split()
         """
         rows = []
-        #for i in range(10):
-        row = input().strip().split('\t')[1:]
-        rows.append([int(num) for num in row])
-        print(row)
-        pass
+        columns = []
+        board = np.zeros((10, 10), dtype=str)
+        number_of_hints  = 0;
+
+        for line in sys.stdin:
+            # Split the line into parts based on tabs
+            parts = line.strip().split('\t')
+            
+            # Check if the first part is ROW or COLUMN
+            if parts[0] == 'ROW':
+                # Store the values for this row
+                rows = [int(x) for x in parts[1:]]
+            elif parts[0] == 'COLUMN':
+                # Store the values for this column
+                columns = [int(x) for x in parts[1:]]
+            elif parts[0] == 'HINT':
+                row, col, letter = int(parts[1]), int(parts[2]), parts[3]
+                board[row][col] = letter
+            elif parts[0].isdigit():
+                number_of_hints = int(parts[0])
+        #print(rows)
+        #print(columns)
+        #print(number_of_hints)
+        #print(board)
 
     # TODO: outros metodos da classe
 
