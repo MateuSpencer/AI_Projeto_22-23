@@ -79,11 +79,6 @@ class Board:
                 board[row][col] = letter
             elif parts[0].isdigit():
                 number_of_hints = int(parts[0])
-        #print(rows)
-        #print(columns)
-        #print(number_of_hints)
-        #print(board)
-
     # TODO: outros metodos da classe
 
 
