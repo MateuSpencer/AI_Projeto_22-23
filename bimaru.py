@@ -78,7 +78,7 @@ class Board:
             elif parts[0].isdigit():
                 pass
 
-            return Board(board), rows_hints, columns_hints
+        return Board(board), rows_hints, columns_hints
         
     # TODO: também pode só ser updated quando um novo estado é criado
     def get_remaining_pieces(self): 
