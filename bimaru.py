@@ -90,29 +90,91 @@ class Board:
                 if piece in remaining_pieces:
                     remaining_pieces[piece] -= 1
         return sum(remaining_pieces.values())
-    
-    
+
+    # A peça C só pode per ao lado Empty (0) ou Water (W)
     def place_C (self, row: int, col: int):
-        #TODO: verificações à volta e na linha / coluna
-        pass
+        above, below = self.adjacent_vertical_values(row, col)
+        if (above != "0" and above != "W") or (below != "0" and below != "W"): # se ou encima ou em baixo nao for ou W ou 0 -> False
+            return False
+        left, right = self.adjacent_horizontal_values(row, col)
+        if (left != "0" and left != "W") or (right != "0" and right != "W"):
+            return False
+        return True
 
+    # A peça M só não pode ter peças C ao lado
     def place_M (self, row: int, col: int):
-        #TODO: verificações à volta e na linha / coluna
-        pass
+        above, below = self.adjacent_vertical_values(row, col)
+        if above == "C" or below == "C":
+            return False
+        left, right = self.adjacent_horizontal_values(row, col)
+        if left == "C" or right == "C":
+            return False
+        return True
 
+    # a peça T so pode ter encima e nos lados ou 0 ou W e em baixo pode ter ou M ou B ou 0
     def place_T (self, row: int, col: int):
-        #TODO: verificações à volta e na linha / coluna
-        pass
-
+        above, below = self.adjacent_vertical_values(row, col)
+        if above != "0" or below not in ["0", "M", "B"]:
+            return False
+        left, right = self.adjacent_horizontal_values(row, col)
+        if left != "0" or right != "0":
+            return False
+        return True
+    # a peça B so pode ter em baixo e nos lados ou 0 ou W e encima pode ter ou M ou T ou 0
     def place_B (self, row: int, col: int):
-        #TODO: verificações à volta e na linha / coluna
-        pass
+        above, below = self.adjacent_vertical_values(row, col)
+        if above != "0" or below not in ["0", "M", "T"]:
+            return False
+        left, right = self.adjacent_horizontal_values(row, col)
+        if left != "0" or right != "0":
+            return False
+        return True
 
+    # a peça R so pode ter à direita ou encima ou em baixo 0 ou W e à esquerda so pode ter M, L ou 0
     def place_R (self, row: int, col: int):
+        above, below = self.adjacent_vertical_values(row, col)
+        if above != "0" or below != "0":
+            return False
+        left, right = self.adjacent_horizontal_values(row, col)
+        if left != "0" or left not in ["0", "M", "L"]:
+            return False
+        return True
+
+    # a peça R so pode ter à esquerda ou encima ou em baixo 0 ou W e à direita so pode ter M, R ou 0
+    def place_L (self, row: int, col: int):
+        above, below = self.adjacent_vertical_values(row, col)
+        if above != "0" or below != "0":
+            return False
+        left, right = self.adjacent_horizontal_values(row, col)
+        if left != "0" or right not in ["0", "M", "R"]:
+            return False
+        return True
+    
+    # Option2.
+    def place_1x1 (self, row: int, col: int):
         #TODO: verificações à volta e na linha / coluna
         pass
 
-    def place_L (self, row: int, col: int):
+    def place_1x2_vertical (self, row: int, col: int):
+        #TODO: verificações à volta e na linha / coluna
+        pass
+
+    def place_1x2_horizontal (self, row: int, col: int):
+        #TODO: verificações à volta e na linha / coluna
+        pass
+
+    def place_1x3_vertical (self, row: int, col: int):
+        #TODO: verificações à volta e na linha / coluna
+        pass
+
+    def place_1x3_horizontal (self, row: int, col: int):
+        #TODO: verificações à volta e na linha / coluna
+        pass
+
+    def place_1x4_vertical (self, row: int, col: int):
+        #TODO: verificações à volta e na linha / coluna
+        pass
+    def place_1x4_horizontal (self, row: int, col: int):
         #TODO: verificações à volta e na linha / coluna
         pass
 
@@ -143,33 +205,43 @@ class Bimaru(Problem):
                     #Two possible approaches:
                         # 1. Try to Place an Indicidual Piece: C, M, T, B, R, L
                         # 2. Try to place a Ship (Horizontal and Vertical): 1x1, 1x2, 1x3, 1x4 (Centered on the topmost/left most piece)
+                    '''
                     # Option 1.
-                    #TODO: O board que estou a guardar pode ser assim ou tem de ser uma cópia?
                     # Try to place a C Piece
                     if state.board.place_C(row,col):
-                        new_board = np.copy(board)
-                        actions.append((new_board, row, col, "C"))
+                        actions.append((row, col, "C"))
                     # Try to place a M Piece
                     if state.board.place_M(board, row,col):
-                        new_board = np.copy(board)
-                        actions.append((new_board, row, col, "M"))
+                        actions.append((row, col, "M"))
                     # Try to place a T Piece
                     if state.board.place_T(row,col):
-                        new_board = np.copy(board)
-                        actions.append((new_board, row, col, "T"))
+                        actions.append((row, col, "T"))
                     # Try to place a B Piece
                     if state.board.place_B(row,col):
-                        new_board = np.copy(board)
-                        actions.append((new_board, row, col, "B"))
+                        actions.append((row, col, "B"))
                     # Try to place a L Piece
                     if state.board.place_L(row,col):
-                        new_board = np.copy(board)
-                        actions.append((new_board, row, col, "L"))
+                        actions.append((row, col, "L"))
                     # Try to place a R Piece
                     if state.board.place_R(row,col):
-                        new_board = np.copy(board)
-                        actions.append((new_board, row, col, "R"))
-                    #return a list of actions to append to the 
+                        actions.append((row, col, "R"))
+                    '''
+                    
+                    # Option 2.
+                    # try to plae a 1x1 ship (on current cell)
+                    if state.board.place_1x1(row,col):
+                        actions.append((row, col, "1x1"))
+                    # try to plae a 1x2 ship vertivaly (topmost square on current cell)
+                    
+                    # try to plae a 1x2 ship horizontaly (leftmost square on current cell)
+                    
+                    # try to plae a 1x3 ship vertivaly (topmost square on current cell)
+                    
+                    # try to plae a 1x3 ship horizontaly (leftmost square on current cell)
+                    
+                    # try to plae a 1x4 ship vertivaly (topmost square on current cell)
+                    
+                    # try to plae a 1x4 ship horizontaly (leftmost square on current cell)
                     
         return actions
 
@@ -178,8 +250,9 @@ class Bimaru(Problem):
         'state' passado como argumento. A ação a executar deve ser uma
         das presentes na lista obtida pela execução de
         self.actions(state)."""
-        board, row, col, piece = action
-        new_state = BimaruState(board)
+        row, col, piece = action
+        new_board = np.copy(state.board)
+        new_state = BimaruState(new_board)
         new_state.board.insert_piece(row, col, piece) # Update the piece on the Board
         return new_state
 
