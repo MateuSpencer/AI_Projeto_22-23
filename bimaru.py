@@ -91,7 +91,7 @@ class Board:
                     remaining_pieces[piece] -= 1
         return sum(remaining_pieces.values())
 
-    # A peça C só pode per ao lado Empty (0) ou Water (W)
+    # A peça C só pode ter ao lado Empty (0) ou Water (W)
     def place_C (self, row: int, col: int):
         above, below = self.adjacent_vertical_values(row, col)
         if (above != "0" and above != "W") or (below != "0" and below != "W"): # se ou encima ou em baixo nao for ou W ou 0 -> False
@@ -114,69 +114,63 @@ class Board:
     # a peça T so pode ter encima e nos lados ou 0 ou W e em baixo pode ter ou M ou B ou 0
     def place_T (self, row: int, col: int):
         above, below = self.adjacent_vertical_values(row, col)
-        if above != "0" or below not in ["0", "M", "B"]:
+        if (above != "0" and above != "W") or below not in ["0", "M", "B"]:
             return False
         left, right = self.adjacent_horizontal_values(row, col)
-        if left != "0" or right != "0":
+        if (left != "0" and left != "W") or (right != "0" and right != "W"):
             return False
         return True
     # a peça B so pode ter em baixo e nos lados ou 0 ou W e encima pode ter ou M ou T ou 0
     def place_B (self, row: int, col: int):
         above, below = self.adjacent_vertical_values(row, col)
-        if above != "0" or below not in ["0", "M", "T"]:
+        if above not in ["0", "M", "T"] or (below != "0" and below != "W")  :
             return False
         left, right = self.adjacent_horizontal_values(row, col)
-        if left != "0" or right != "0":
+        if (left != "0" and left != "W") or (right != "0" and right != "W"):
             return False
         return True
 
     # a peça R so pode ter à direita ou encima ou em baixo 0 ou W e à esquerda so pode ter M, L ou 0
     def place_R (self, row: int, col: int):
         above, below = self.adjacent_vertical_values(row, col)
-        if above != "0" or below != "0":
+        if (above != "0" and above != "W") or (below != "0" and below != "W"):
             return False
         left, right = self.adjacent_horizontal_values(row, col)
-        if left != "0" or left not in ["0", "M", "L"]:
+        if left not in ["0", "M", "L"] or (right != "0" and right != "W"):
             return False
         return True
 
-    # a peça R so pode ter à esquerda ou encima ou em baixo 0 ou W e à direita so pode ter M, R ou 0
+    # a peça L so pode ter à esquerda ou encima ou em baixo 0 ou W e à direita so pode ter M, R ou 0
     def place_L (self, row: int, col: int):
         above, below = self.adjacent_vertical_values(row, col)
-        if above != "0" or below != "0":
+        if (above != "0" and above != "W") or (below != "0" and below != "W"):
             return False
         left, right = self.adjacent_horizontal_values(row, col)
-        if left != "0" or right not in ["0", "M", "R"]:
+        if (left != "0" and left != "W") or right not in ["0", "M", "R"]:
             return False
         return True
     
     # Option2.
     def place_1x1 (self, row: int, col: int):
-        #TODO: verificações à volta e na linha / coluna
-        pass
+        return self.place_C(row, col)
 
     def place_1x2_vertical (self, row: int, col: int):
-        #TODO: verificações à volta e na linha / coluna
-        pass
+        return self.place_T(row,col) and self.place_B(row, col - 1)
 
     def place_1x2_horizontal (self, row: int, col: int):
-        #TODO: verificações à volta e na linha / coluna
-        pass
+        return self.place_L(row,col) and self.place_R(row + 1, col)
 
     def place_1x3_vertical (self, row: int, col: int):
-        #TODO: verificações à volta e na linha / coluna
-        pass
+        return self.place_T(row,col) and self.place_M(row, col - 1) and self.place_B(row, col - 2)
 
     def place_1x3_horizontal (self, row: int, col: int):
-        #TODO: verificações à volta e na linha / coluna
-        pass
+        return self.place_L(row,col) and self.place_M(row + 1, col) and self.place_R(row + 2, col)
 
     def place_1x4_vertical (self, row: int, col: int):
-        #TODO: verificações à volta e na linha / coluna
-        pass
+        return self.place_T(row,col) and self.place_M(row, col - 1) and self.place_M(row, col - 2) and self.place_B(row, col - 3)
+
     def place_1x4_horizontal (self, row: int, col: int):
-        #TODO: verificações à volta e na linha / coluna
-        pass
+        return self.place_L(row,col) and self.place_M(row + 1, col) and self.place_M(row + 2, col) and self.place_R(row + 3, col)
 
 def insert_piece(self, row: int, col: int, piece: str):
     """Insere uma peça na posição indicada."""
@@ -228,21 +222,29 @@ class Bimaru(Problem):
                     '''
                     
                     # Option 2.
+                    # TODO por codigo mais smart
                     # try to plae a 1x1 ship (on current cell)
                     if state.board.place_1x1(row,col):
                         actions.append((row, col, "1x1"))
                     # try to plae a 1x2 ship vertivaly (topmost square on current cell)
-                    
+                    if state.board.place_1x2_vertical(row,col):
+                        actions.append((row, col, "1x2_vertical"))
                     # try to plae a 1x2 ship horizontaly (leftmost square on current cell)
-                    
+                    if state.board.place_1x2_horizontal(row,col):
+                        actions.append((row, col, "1x2_horizontal"))
                     # try to plae a 1x3 ship vertivaly (topmost square on current cell)
-                    
+                    if state.board.place_1x3_vertical(row,col):
+                        actions.append((row, col, "1x3_vertical"))
                     # try to plae a 1x3 ship horizontaly (leftmost square on current cell)
-                    
+                    if state.board.place_1x3_horizontal(row,col):
+                        actions.append((row, col, "1x3_horizontal"))
                     # try to plae a 1x4 ship vertivaly (topmost square on current cell)
-                    
+                    if state.board.place_1x4_vertical(row,col):
+                        actions.append((row, col, "1x4_vertical"))
                     # try to plae a 1x4 ship horizontaly (leftmost square on current cell)
-                    
+                    if state.board.place_1x4_horizontal(row,col):
+                        actions.append((row, col, "1x4_horizontal"))
+
         return actions
 
     def result(self, state: BimaruState, action):
