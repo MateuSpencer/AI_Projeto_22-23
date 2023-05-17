@@ -322,7 +322,7 @@ class Bimaru(Problem):
                     if state.board.check_place_1x4_horizontal(row,col):
                         actions.append((row, col, "1x4_horizontal"))
 
-        return actions
+        return actions 
 
     def result(self, state: BimaruState, action):
         """Retorna o estado resultante de executar a 'action' sobre
