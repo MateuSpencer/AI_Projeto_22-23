@@ -278,12 +278,12 @@ class Board:
             self.board[row][col + 1] = "W"
     def insert_water_below (self, row: int, col: int):
         """inserts water below the given position"""
-        if 0 <= row - 1 <= 9:
-            self.board[row - 1][col] = "W"
-    def insert_water_ontop (self, row: int, col: int):
-        """inserts water on top of the given position"""
         if 0 <= row + 1 <= 9:
             self.board[row + 1][col] = "W"
+    def insert_water_ontop (self, row: int, col: int):
+        """inserts water on top of the given position"""
+        if 0 <= row - 1 <= 9:
+            self.board[row - 1][col] = "W"
     def insert_water_ontop_below(self, row: int, col: int):
         """Inserts water on top and below the given position"""
         self.insert_water_below(row, col)
