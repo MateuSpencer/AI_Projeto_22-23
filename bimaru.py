@@ -424,8 +424,6 @@ class Board:
             self.col_pieces_placed[col + 2] += 1
             self.col_pieces_placed[col + 3] += 1
         
-        print(self.board)
-        print("\n\n")
         #TODO: Verificar se completámos completamente uma linha / coluna e preencher com água
 
 
@@ -491,6 +489,8 @@ class Bimaru(Problem):
         """Retorna True se e só se o estado passado como argumento é
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
         estão preenchidas de acordo com as regras do problema."""
+        print(state.board.board)
+        print("\n\n")
         return state.board.get_remaining_pieces() == 0
 
     def h(self, node: Node):
@@ -509,7 +509,7 @@ if __name__ == "__main__":
     print(problem.state.board.board)
     # Usar uma técnica de procura para resolver a instância,
     # Retirar a solução a partir do nó resultante,
-    goal_node = breadth_first_tree_search(problem)
+    goal_node = astar_search(problem)
     # Imprimir para o standard output no formato indicado.
     # TODO
     # Replace 'W' with '.'
