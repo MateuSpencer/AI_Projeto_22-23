@@ -4,10 +4,11 @@
 
 # Grupo 00:
 # 100032 Mateus Spencer
-# 00000 Nome2
+# 95832 Miguel Cunha
 
 import sys
 import numpy as np
+from typing import Tuple
 from search import (
     Problem,
     Node,
@@ -21,7 +22,7 @@ from search import (
 
 class BimaruState:
     state_id = 0
-
+    
     def __init__(self, board):
         self.board = board
         self.id = BimaruState.state_id
@@ -36,23 +37,38 @@ class BimaruState:
 class Board:
     """Representação interna de um tabuleiro de Bimaru."""
     
-    def __init__(self, board, row_pieces_placed, col_pieces_placed):
+    def __init__(self, board, row_pieces_placed, col_pieces_placed, pieces_in_rows, pieces_in_cols):
         self.board = board
-        self.remaining_pieces = {"C": 4, "T": 2, "M": 3, "B": 2, "L": 3, "R": 3}
+        self.remaining_pieces = {"C": 4, "M": 4, "TBRL": 12}
         self.row_pieces_placed = row_pieces_placed # vector to store how many pieces have been placed in each row
         self.col_pieces_placed = col_pieces_placed # vector to store how many pieces have been placed in each column
+        self.pieces_in_rows = pieces_in_rows # vector to store how many pieces are in each row
+        self.pieces_in_cols = pieces_in_cols # vector to store how many pieces are in each column
+
 
     def get_value(self, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
         return self.board[row][col]
 
-    def adjacent_vertical_values(self, row: int, col: int) -> (str, str):
+    def set_value(self, row: int, col: int, value: str):
+        """Define o valor na respetiva posição do tabuleiro."""
+        self.board[row][col] = value
+
+    def get_pieces_in_row(self, row: int) -> int:
+        """Devolve o número de peças que devem ser colocadas na respetiva linha."""
+        return self.pieces_in_rows[row]
+
+    def get_pieces_in_col(self, col: int) -> int:
+        """Devolve o número de peças que devem ser colocadas na respetiva coluna."""
+        return self.pieces_in_cols[col]
+
+    def adjacent_vertical_values(self, row: int, col: int) -> Tuple[str, str]:
         """Devolve os valores imediatamente acima e abaixo, respectivamente."""
         above = self.get_value(row-1, col) if row > 0 else None
         below = self.get_value(row+1, col) if row < 9 else None
         return above, below
 
-    def adjacent_horizontal_values(self, row: int, col: int) -> (str, str):
+    def adjacent_horizontal_values(self, row: int, col: int) -> Tuple[str, str]:
         """Devolve os valores imediatamente à esquerda e à direita, respectivamente."""
         left = self.get_value(row, col-1) if col > 0 else None
         right = self.get_value(row, col+1) if col < 9 else None
@@ -86,13 +102,17 @@ class Board:
             elif parts[0].isdigit():
                 pass
 
-        return Board(board, row_pieces_placed, col_pieces_placed), row_hints, col_hints
+        return Board(board, row_pieces_placed, col_pieces_placed, row_hints, col_hints), row_hints, col_hints
         
     def get_remaining_pieces(self):
         """Retorna o número de peças que ainda faltam colocar no tabuleiro."""
         return sum(self.remaining_pieces.values())
 
     # Falta verificar se colocar esta peça não excede o numero de peças na rows_hints / columns_hints (na clase Bimaru)
+    def check_number_of_pieces_in_row_and_col(self, row: int, col: int):
+        if (self.get_pieces_in_row(row) == self.row_pieces_placed[row]) or (self.get_pieces_in_col(col) == self.col_pieces_placed[col]):
+            return False
+        return True
     
     # A peça C só pode ter ao lado Empty (0) ou Water (W)
     def check_place_C (self, row: int, col: int):
@@ -120,7 +140,7 @@ class Board:
 
     # a peça T so pode ter encima e nos lados ou 0 ou W e em baixo pode ter ou M ou B ou 0
     def check_place_T (self, row: int, col: int):
-        if self.remaining_pieces["T"] == 0:
+        if self.remaining_pieces["TBRL"] == 0:
             return False
         above, below = self.adjacent_vertical_values(row, col)
         if (above != "0" and above != "W") or below not in ["0", "M", "B"]:
@@ -131,7 +151,7 @@ class Board:
         return True
     # a peça B so pode ter em baixo e nos lados ou 0 ou W e encima pode ter ou M ou T ou 0
     def check_place_B (self, row: int, col: int):
-        if self.remaining_pieces["B"] == 0:
+        if self.remaining_pieces["TBRL"] == 0:
             return False
         above, below = self.adjacent_vertical_values(row, col)
         if above not in ["0", "M", "T"] or (below != "0" and below != "W")  :
@@ -143,7 +163,7 @@ class Board:
 
     # a peça R so pode ter à direita ou encima ou em baixo 0 ou W e à esquerda so pode ter M, L ou 0
     def check_place_R (self, row: int, col: int):
-        if self.remaining_pieces["R"] == 0:
+        if self.remaining_pieces["TBRL"] == 0:
             return False
         above, below = self.adjacent_vertical_values(row, col)
         if (above != "0" and above != "W") or (below != "0" and below != "W"):
@@ -155,7 +175,7 @@ class Board:
 
     # a peça L so pode ter à esquerda ou encima ou em baixo 0 ou W e à direita so pode ter M, R ou 0
     def check_place_L (self, row: int, col: int):
-        if self.remaining_pieces["L"] == 0:
+        if self.remaining_pieces["TBRL"] == 0:
             return False
         above, below = self.adjacent_vertical_values(row, col)
         if (above != "0" and above != "W") or (below != "0" and below != "W"):
@@ -208,8 +228,8 @@ class Board:
         elif piece == '1x2_vertical':
             self.board[row][col] = "T"
             self.board[row + 1][col] = "B"
-            self.remaining_pieces["T"] -= 1
-            self.remaining_pieces["B"] -= 1
+            self.remaining_pieces["TBRL"] -= 1
+            self.remaining_pieces["TBRL"] -= 1
             self.row_pieces_placed[row] += 1
             self.row_pieces_placed[row + 1] += 1
             self.col_pieces_placed[col] += 2
@@ -217,8 +237,8 @@ class Board:
         elif piece == '1x2_horizontal':
             self.board[row][col] = "L"
             self.board[row][col + 1] = "R"
-            self.remaining_pieces["L"] -= 1
-            self.remaining_pieces["R"] -= 1
+            self.remaining_pieces["TBRL"] -= 1
+            self.remaining_pieces["TBRL"] -= 1
             self.row_pieces_placed[row] += 2
             self.col_pieces_placed[col] += 1
             self.col_pieces_placed[col + 1] += 1
@@ -227,9 +247,9 @@ class Board:
             self.board[row][col] = "T"
             self.board[row + 1][col] = "M"
             self.board[row + 2][col] = "B"
-            self.remaining_pieces["T"] -= 1
+            self.remaining_pieces["TBRL"] -= 1
             self.remaining_pieces["M"] -= 1
-            self.remaining_pieces["B"] -= 1
+            self.remaining_pieces["TBRL"] -= 1
             self.row_pieces_placed[row] += 1
             self.row_pieces_placed[row + 1] += 1
             self.row_pieces_placed[row + 2] += 1
@@ -239,9 +259,9 @@ class Board:
             self.board[row][col] = "L"
             self.board[row][col + 1] = "M"
             self.board[row][col + 2] = "R"
-            self.remaining_pieces["L"] -= 1
+            self.remaining_pieces["TBRL"] -= 1
             self.remaining_pieces["M"] -= 1
-            self.remaining_pieces["R"] -= 1
+            self.remaining_pieces["TBRL"] -= 1
             self.row_pieces_placed[row] += 3
             self.col_pieces_placed[col] += 1
             self.col_pieces_placed[col + 1] += 1
@@ -252,9 +272,9 @@ class Board:
             self.board[row + 1][col] = "M"
             self.board[row + 2][col] = "M"
             self.board[row + 3][col] = "B"
-            self.remaining_pieces["T"] -= 1
+            self.remaining_pieces["TBRL"] -= 1
             self.remaining_pieces["M"] -= 2
-            self.remaining_pieces["B"] -= 1
+            self.remaining_pieces["TBRL"] -= 1
             self.row_pieces_placed[row] += 1
             self.row_pieces_placed[row + 1] += 1
             self.row_pieces_placed[row + 2] += 1
@@ -266,9 +286,9 @@ class Board:
             self.board[row][col + 1] = "M"
             self.board[row][col + 2] = "M"
             self.board[row][col + 3] = "R"
-            self.remaining_pieces["L"] -= 1
+            self.remaining_pieces["TBRL"] -= 1
             self.remaining_pieces["M"] -= 2
-            self.remaining_pieces["R"] -= 1
+            self.remaining_pieces["TBRL"] -= 1
             self.row_pieces_placed[row] += 4
             self.col_pieces_placed[col] += 1
             self.col_pieces_placed[col + 1] += 1
@@ -296,31 +316,32 @@ class Bimaru(Problem):
                     break
                 # if cell is empty
                 if state.board.get_value(row, col) == "0":
-                    #Two possible approaches:
-                        # 1. Try to Place an Indicidual Piece: C, M, T, B, R, L
-                        # 2. Try to place a Ship (Horizontal and Vertical): 1x1, 1x2, 1x3, 1x4 (Centered on the topmost/left most piece)
-                    # Option 2.
-                    # try to plae a 1x1 ship (on current cell)
-                    if state.board.check_place_1x1(row,col):
-                        actions.append((row, col, "1x1"))
-                    # try to plae a 1x2 ship vertivaly (topmost square on current cell)
-                    if state.board.check_place_1x2_vertical(row,col):
-                        actions.append((row, col, "1x2_vertical"))
-                    # try to plae a 1x2 ship horizontaly (leftmost square on current cell)
-                    if state.board.check_place_1x2_horizontal(row,col):
-                        actions.append((row, col, "1x2_horizontal"))
-                    # try to plae a 1x3 ship vertivaly (topmost square on current cell)
-                    if state.board.check_place_1x3_vertical(row,col):
-                        actions.append((row, col, "1x3_vertical"))
-                    # try to plae a 1x3 ship horizontaly (leftmost square on current cell)
-                    if state.board.check_place_1x3_horizontal(row,col):
-                        actions.append((row, col, "1x3_horizontal"))
-                    # try to plae a 1x4 ship vertivaly (topmost square on current cell)
-                    if state.board.check_place_1x4_vertical(row,col):
-                        actions.append((row, col, "1x4_vertical"))
-                    # try to plae a 1x4 ship horizontaly (leftmost square on current cell)
-                    if state.board.check_place_1x4_horizontal(row,col):
-                        actions.append((row, col, "1x4_horizontal"))
+                    if state.board.check_number_of_pieces_in_row_and_col(row,col):
+                        #Two possible approaches:
+                            # 1. Try to Place an Indicidual Piece: C, M, T, B, R, L
+                            # 2. Try to place a Ship (Horizontal and Vertical): 1x1, 1x2, 1x3, 1x4 (Centered on the topmost/left most piece)
+                        # Option 2.
+                        # try to plae a 1x1 ship (on current cell)
+                        if state.board.check_place_1x1(row,col):
+                            actions.append((row, col, "1x1"))
+                        # try to plae a 1x2 ship vertivaly (topmost square on current cell)
+                        if state.board.check_place_1x2_vertical(row,col):
+                            actions.append((row, col, "1x2_vertical"))
+                        # try to plae a 1x2 ship horizontaly (leftmost square on current cell)
+                        if state.board.check_place_1x2_horizontal(row,col):
+                            actions.append((row, col, "1x2_horizontal"))
+                        # try to plae a 1x3 ship vertivaly (topmost square on current cell)
+                        if state.board.check_place_1x3_vertical(row,col):
+                            actions.append((row, col, "1x3_vertical"))
+                        # try to plae a 1x3 ship horizontaly (leftmost square on current cell)
+                        if state.board.check_place_1x3_horizontal(row,col):
+                            actions.append((row, col, "1x3_horizontal"))
+                        # try to plae a 1x4 ship vertivaly (topmost square on current cell)
+                        if state.board.check_place_1x4_vertical(row,col):
+                            actions.append((row, col, "1x4_vertical"))
+                        # try to plae a 1x4 ship horizontaly (leftmost square on current cell)
+                        if state.board.check_place_1x4_horizontal(row,col):
+                            actions.append((row, col, "1x4_horizontal"))
 
         return actions 
 
@@ -351,10 +372,17 @@ if __name__ == "__main__":
     # Ler o ficheiro do standard input,
     board, row_hints, col_hints = Board.parse_instance()
     problem = Bimaru(board, row_hints, col_hints)
+    for i in range(10):
+        for j in range(10):
+            if board.get_value(i,j) == "":
+                print(".", end="")
+            else:
+                print(board.get_value(i,j), end="") 
+        print('\n')
     # Usar uma técnica de procura para resolver a instância,
     # Retirar a solução a partir do nó resultante,
-    goal_node = astar_search(problem)
+    # goal_node = astar_search(problem)
     # Imprimir para o standard output no formato indicado.
-    print(goal_node.state.board)
+    # print(goal_node.state.board)
     #function to print oput 
     pass
