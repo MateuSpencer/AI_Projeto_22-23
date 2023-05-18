@@ -8,6 +8,7 @@
 
 import sys
 import numpy as np
+import copy
 from typing import Tuple
 from search import (
     Problem,
@@ -53,14 +54,14 @@ class Board:
 
     def adjacent_vertical_values(self, row: int, col: int) -> Tuple[str, str]:
         """Devolve os valores imediatamente acima e abaixo, respectivamente."""
-        above = self.get_value(row-1, col) if row > 0 else None
-        below = self.get_value(row+1, col) if row < 9 else None
+        above = self.get_value(row-1, col) if row > 0 else ""
+        below = self.get_value(row+1, col) if row < 9 else ""
         return above, below
 
     def adjacent_horizontal_values(self, row: int, col: int) -> Tuple[str, str]:
         """Devolve os valores imediatamente à esquerda e à direita, respectivamente."""
-        left = self.get_value(row, col-1) if col > 0 else None
-        right = self.get_value(row, col+1) if col < 9 else None
+        left = self.get_value(row, col-1) if col > 0 else ""
+        right = self.get_value(row, col+1) if col < 9 else ""
         return left, right
 
 
@@ -72,9 +73,10 @@ class Board:
         row_hints = []
         col_hints = []
         remaining_pieces = {"C": 4, "M": 4, "TBRL": 12} # initial number of pieces to be placed on the board
-        board = np.zeros((10, 10), dtype=str) # empty cells represented with "0"
+        board = np.zeros((10, 10), dtype=str)
         row_pieces_placed = np.zeros(10, dtype=int)
         col_pieces_placed = np.zeros(10, dtype=int)
+        hint_counter = 0
         
         for line in sys.stdin:
             # Split the line into parts by tabs
@@ -85,6 +87,7 @@ class Board:
             elif parts[0] == 'COLUMN':
                 col_hints = [int(x) for x in parts[1:]]
             elif parts[0] == 'HINT':
+                
                 row, col, letter = int(parts[1]), int(parts[2]), parts[3]
                 board[row][col] = letter
                 if letter != "W":
@@ -96,9 +99,11 @@ class Board:
                         remaining_pieces["M"] -= 1
                     elif letter in ["T", "B", "R", "L"]:
                         remaining_pieces["TBRL"] -= 1
+                hint_counter -= 1
+                if hint_counter == 0:
+                    break
             elif parts[0].isdigit(): 
-                pass # ignore number of hints
-        
+                hint_counter = int(parts[0])
         return board, row_pieces_placed, col_pieces_placed, remaining_pieces, row_hints, col_hints
 
 
@@ -112,10 +117,10 @@ class Board:
         if self.remaining_pieces["C"] == 0:
             return False
         above, below = self.adjacent_vertical_values(row, col)
-        if (above != "0" and above != "W") or (below != "0" and below != "W"): # se ou encima ou em baixo nao for ou W ou 0 -> False
+        if (above != "" and above != "W") or (below != "" and below != "W"): # se ou encima ou em baixo nao for ou W ou empty -> False
             return False
         left, right = self.adjacent_horizontal_values(row, col)
-        if (left != "0" and left != "W") or (right != "0" and right != "W"):
+        if (left != "" and left != "W") or (right != "" and right != "W"):
             return False
         return True
 
@@ -136,10 +141,10 @@ class Board:
         if self.remaining_pieces["TBRL"] == 0:
             return False
         above, below = self.adjacent_vertical_values(row, col)
-        if (above != "0" and above != "W") or below not in ["0", "M", "B"]:
+        if (above != "" and above != "W") or below not in ["", "M", "B"]:
             return False
         left, right = self.adjacent_horizontal_values(row, col)
-        if (left != "0" and left != "W") or (right != "0" and right != "W"):
+        if (left != "" and left != "W") or (right != "" and right != "W"):
             return False
         return True
     # a peça B so pode ter em baixo e nos lados ou 0 ou W e encima pode ter ou M ou T ou 0
@@ -147,10 +152,10 @@ class Board:
         if self.remaining_pieces["TBRL"] == 0:
             return False
         above, below = self.adjacent_vertical_values(row, col)
-        if above not in ["0", "M", "T"] or (below != "0" and below != "W")  :
+        if above not in ["", "M", "T"] or (below != "" and below != "W")  :
             return False
         left, right = self.adjacent_horizontal_values(row, col)
-        if (left != "0" and left != "W") or (right != "0" and right != "W"):
+        if (left != "" and left != "W") or (right != "" and right != "W"):
             return False
         return True
 
@@ -159,10 +164,10 @@ class Board:
         if self.remaining_pieces["TBRL"] == 0:
             return False
         above, below = self.adjacent_vertical_values(row, col)
-        if (above != "0" and above != "W") or (below != "0" and below != "W"):
+        if (above != "" and above != "W") or (below != "" and below != "W"):
             return False
         left, right = self.adjacent_horizontal_values(row, col)
-        if left not in ["0", "M", "L"] or (right != "0" and right != "W"):
+        if left not in ["", "M", "L"] or (right != "" and right != "W"):
             return False
         return True
 
@@ -171,10 +176,10 @@ class Board:
         if self.remaining_pieces["TBRL"] == 0:
             return False
         above, below = self.adjacent_vertical_values(row, col)
-        if (above != "0" and above != "W") or (below != "0" and below != "W"):
+        if (above != "" and above != "W") or (below != "" and below != "W"):
             return False
         left, right = self.adjacent_horizontal_values(row, col)
-        if (left != "0" and left != "W") or right not in ["0", "M", "R"]:
+        if (left != "" and left != "W") or right not in ["", "M", "R"]:
             return False
         return True
     
@@ -191,7 +196,11 @@ class Board:
         
         return self.check_place_C(row, col)
 
+    #TODO: ERRO: quando tenta colocar um barco que excede os limites do tabuleiro, dar logo false
     def check_place_1x2_vertical (self, row: int, col: int):
+        if row + 1 > 9:
+            return False # cannot exceed board limits
+        
         if ((self.row_pieces_placed[row] + 1) > self.bimaru.row_hints[row]) or ((self.row_pieces_placed[row + 1] + 1) > self.bimaru.row_hints[row + 1]):
             return False # if adding 1 piece to this row or the one below exceeds the hint value, invalid placement
         if ((self.col_pieces_placed[col] + 2) > self.bimaru.col_hints[col]):
@@ -200,6 +209,9 @@ class Board:
         return self.check_place_T(row,col) and self.check_place_B(row - 1, col)
 
     def check_place_1x2_horizontal (self, row: int, col: int):
+        if col + 1 > 9:
+            return False # cannot exceed board limits
+        
         if ((self.row_pieces_placed[row] + 2) > self.bimaru.row_hints[row]):
             return False # if adding 2 pieces to this row exceeds the hint value, invalid placement
         if ((self.col_pieces_placed[col] + 1) > self.bimaru.col_hints[col]) or ((self.col_pieces_placed[col + 1] + 1) > self.bimaru.col_hints[col + 1]):
@@ -208,6 +220,9 @@ class Board:
         return self.check_place_L(row,col) and self.check_place_R(row, col +1)
 
     def check_place_1x3_vertical (self, row: int, col: int):
+        if row + 2 > 9:
+            return False # cannot exceed board limits
+        
         if ((self.row_pieces_placed[row] + 1) > self.bimaru.row_hints[row]) or ((self.row_pieces_placed[row + 1] + 1) > self.bimaru.row_hints[row + 1]) or ((self.row_pieces_placed[row + 2] + 1) > self.bimaru.row_hints[row + 2]):
             return False # if adding 1 piece to this row or the two below exceeds the hint value, invalid placement
         if ((self.col_pieces_placed[col] + 3) > self.bimaru.col_hints[col]):
@@ -216,6 +231,9 @@ class Board:
         return self.check_place_T(row,col) and self.check_place_M(row - 1, col) and self.check_place_B(row - 2, col)
 
     def check_place_1x3_horizontal (self, row: int, col: int):
+        if col + 2 > 9:
+            return False # cannot exceed board limits
+        
         if ((self.row_pieces_placed[row] + 3) > self.bimaru.row_hints[row]):
             return False # if adding 3 pieces to this row exceeds the hint value, invalid placement
         if ((self.col_pieces_placed[col] + 1) > self.bimaru.col_hints[col]) or ((self.col_pieces_placed[col + 1] + 1) > self.bimaru.col_hints[col + 1]) or ((self.col_pieces_placed[col + 2] + 1) > self.bimaru.col_hints[col + 2]):
@@ -224,6 +242,9 @@ class Board:
         return self.check_place_L(row,col) and self.check_place_M(row, col + 1) and self.check_place_R(row, col + 2)
 
     def check_place_1x4_vertical (self, row: int, col: int):
+        if row + 3 > 9:
+            return False # cannot exceed board limits
+        
         if ((self.row_pieces_placed[row] + 1) > self.bimaru.row_hints[row]) or ((self.row_pieces_placed[row + 1] + 1) > self.bimaru.row_hints[row + 1]) or ((self.row_pieces_placed[row + 2] + 1) > self.bimaru.row_hints[row + 2]) or ((self.row_pieces_placed[row + 3] + 1) > self.bimaru.row_hints[row + 3]):
             return False # if adding 1 piece to this row or the three below exceeds the hint value, invalid placement
         if ((self.col_pieces_placed[col] + 4) > self.bimaru.col_hints[col]):
@@ -234,6 +255,9 @@ class Board:
         return self.check_place_T(row,col) and self.check_place_M(row - 1, col) and self.check_place_M(row - 2, col) and self.check_place_B(row - 3, col)
 
     def check_place_1x4_horizontal (self, row: int, col: int):
+        if col + 3 > 9:
+            return False # cannot exceed board limits
+        
         if ((self.row_pieces_placed[row] + 4) > self.bimaru.row_hints[row]):
             return False # if adding 4 pieces to this row exceeds the hint value, invalid placement
         if ((self.col_pieces_placed[col] + 1) > self.bimaru.col_hints[col]) or ((self.col_pieces_placed[col + 1] + 1) > self.bimaru.col_hints[col + 1]) or ((self.col_pieces_placed[col + 2] + 1) > self.bimaru.col_hints[col + 2]) or ((self.col_pieces_placed[col + 3] + 1) > self.bimaru.col_hints[col + 3]):
@@ -400,6 +424,8 @@ class Board:
             self.col_pieces_placed[col + 2] += 1
             self.col_pieces_placed[col + 3] += 1
         
+        print(self.board)
+        print("\n\n")
         #TODO: Verificar se completámos completamente uma linha / coluna e preencher com água
 
 
@@ -408,6 +434,7 @@ class Bimaru(Problem):
         """O construtor especifica o estado inicial."""
         board_object = Board(board, row_pieces_placed, col_pieces_placed, remaining_pieces, self) #Criar o Board inicial, passando o problema Bimaru para poder aceder às hints
         self.state = BimaruState(board_object)
+        super().__init__(self.state)
         # number of positions in the row / column with a ship cell
         self.row_hints = row_hints 
         self.col_hints = col_hints
@@ -420,7 +447,7 @@ class Bimaru(Problem):
             for col in range(10):
                 if state.board.get_remaining_pieces() == 0: # Just precaution, if all pieces are placed
                     break
-                if state.board.get_value(row, col) == "0": # Only tries to place a piece in an empty cell
+                if state.board.get_value(row, col) == "": # Only tries to place a piece in an empty cell
                         #Two possible approaches:
                             # 1. Try to Place an Indicidual Piece: C, M, T, B, R, L
                             # 2. Try to place a Ship (Horizontal and Vertical): 1x1, 1x2, 1x3, 1x4 (Centered on the topmost/left most piece)
@@ -455,7 +482,7 @@ class Bimaru(Problem):
         das presentes na lista obtida pela execução de
         self.actions(state)."""
         row, col, ship = action
-        new_board = np.copy(state.board)
+        new_board = copy.deepcopy(state.board)
         new_state = BimaruState(new_board)
         new_state.board.insert_ship(row, col, ship)
         return new_state
@@ -479,13 +506,7 @@ if __name__ == "__main__":
     board, row_pieces_placed, col_pieces_placed, remaining_pieces, row_hints, col_hints = Board.parse_instance()
     # Criar uma instância do problema Bimaru,
     problem = Bimaru(board, row_pieces_placed, col_pieces_placed, remaining_pieces, row_hints, col_hints)
-    for i in range(10):
-        for j in range(10):
-            if board.get_value(i,j) == "":
-                print(".", end="")
-            else:
-                print(board.get_value(i,j), end="") 
-        print('\n')
+    print(problem.state.board.board)
     # Usar uma técnica de procura para resolver a instância,
     # Retirar a solução a partir do nó resultante,
     goal_node = astar_search(problem)
