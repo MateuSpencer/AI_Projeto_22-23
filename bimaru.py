@@ -119,22 +119,34 @@ class Board:
         if self.remaining_pieces["C"] == 0:
             return False
         above, below = self.adjacent_vertical_values(row, col)
-        if (above != "" and above != "W") or (below != "" and below != "W"): # se ou encima ou em baixo nao for ou W ou empty -> False
+        if above not in ["", "W"] or below not in ["", "W"]: # se ou encima ou em baixo nao for ou W ou empty -> False
             return False
         left, right = self.adjacent_horizontal_values(row, col)
-        if (left != "" and left != "W") or (right != "" and right != "W"):
+        if left not in ["", "W"] or right not in ["", "W"]:
             return False
         return True
 
-    # A peça M só não pode ter peças C ao lado
-    def check_place_M (self, row: int, col: int):
+    # A peça M vertical só pode ter peças W ou empty de lado ou Top/M Encima e Bottom/M Embaixo
+    def check_place_M_vertical (self, row: int, col: int):
         if self.remaining_pieces["M"] == 0:
             return False
         above, below = self.adjacent_vertical_values(row, col)
-        if above == "C" or below == "C":
+        if above not in ["T", "M", ""] or below not in ["B", "M", ""]:
             return False
         left, right = self.adjacent_horizontal_values(row, col)
-        if left == "C" or right == "C": #TODO: Problem: se por exemplo esta a ser usada para colocar um vertical, pode ter T ou B encima/Baixo mas nao pode ter algo que nao Empty ou Water ao Lado
+        if left not in ["", "W"] or right not in ["", "W"]:
+            return False
+        return True
+    
+    # A peça M horizontal só pode ter peças W ou empty encima ou Left/M Esquerda e Right/M Direita
+    def check_place_M_horizontal (self, row: int, col: int):
+        if self.remaining_pieces["M"] == 0:
+            return False
+        above, below = self.adjacent_vertical_values(row, col)
+        if above not in ["", "W"] or below not in ["", "W"]:
+            return False
+        left, right = self.adjacent_horizontal_values(row, col)
+        if left not in ["L", "M", ""] or right not in ["R", "M", ""]:
             return False
         return True
 
@@ -143,10 +155,10 @@ class Board:
         if self.remaining_pieces["TBRL"] == 0:
             return False
         above, below = self.adjacent_vertical_values(row, col)
-        if (above != "" and above != "W") or below not in ["", "M", "B"]:
+        if above not in ["", "W"] or below not in ["", "M", "B"]:
             return False
         left, right = self.adjacent_horizontal_values(row, col)
-        if (left != "" and left != "W") or (right != "" and right != "W"):
+        if left not in ["", "W"] or right not in ["", "W"]:
             return False
         return True
     # a peça B so pode ter em baixo e nos lados ou 0 ou W e encima pode ter ou M ou T ou 0
@@ -154,10 +166,10 @@ class Board:
         if self.remaining_pieces["TBRL"] == 0:
             return False
         above, below = self.adjacent_vertical_values(row, col)
-        if above not in ["", "M", "T"] or (below != "" and below != "W")  :
+        if above not in ["", "M", "T"] or below not in ["", "W"]:
             return False
         left, right = self.adjacent_horizontal_values(row, col)
-        if (left != "" and left != "W") or (right != "" and right != "W"):
+        if left not in ["", "W"] or right not in ["", "W"]:
             return False
         return True
 
@@ -166,10 +178,10 @@ class Board:
         if self.remaining_pieces["TBRL"] == 0:
             return False
         above, below = self.adjacent_vertical_values(row, col)
-        if (above != "" and above != "W") or (below != "" and below != "W"):
+        if above not in ["", "W"] or below not in ["", "W"]:
             return False
         left, right = self.adjacent_horizontal_values(row, col)
-        if left not in ["", "M", "L"] or (right != "" and right != "W"):
+        if left not in ["", "M", "L"] or right not in ["", "W"]:
             return False
         return True
 
@@ -178,10 +190,10 @@ class Board:
         if self.remaining_pieces["TBRL"] == 0:
             return False
         above, below = self.adjacent_vertical_values(row, col)
-        if (above != "" and above != "W") or (below != "" and below != "W"):
+        if above not in ["", "W"] or below not in ["", "W"]:
             return False
         left, right = self.adjacent_horizontal_values(row, col)
-        if (left != "" and left != "W") or right not in ["", "M", "R"]:
+        if left not in ["", "W"] or right not in ["", "M", "R"]:
             return False
         return True
     
@@ -240,7 +252,7 @@ class Board:
         if ((self.col_pieces_placed[col] + 3) > self.bimaru.col_hints[col]):
             return False # if adding 3 pieces to this column exceeds the hint value, invalid placement
         
-        return self.check_place_T(row,col) and self.check_place_M(row + 1, col) and self.check_place_B(row + 2, col)
+        return self.check_place_T(row,col) and self.check_place_M_vertical(row + 1, col) and self.check_place_B(row + 2, col)
 
     def check_place_1x3_horizontal (self, row: int, col: int):
         if self.remaining_ships["1x3"] == 0:
@@ -254,7 +266,7 @@ class Board:
         if ((self.col_pieces_placed[col] + 1) > self.bimaru.col_hints[col]) or ((self.col_pieces_placed[col + 1] + 1) > self.bimaru.col_hints[col + 1]) or ((self.col_pieces_placed[col + 2] + 1) > self.bimaru.col_hints[col + 2]):
             return False # if adding 1 piece to this column or the next two to the right exceeds the hint value, invalid placement
         
-        return self.check_place_L(row,col) and self.check_place_M(row, col + 1) and self.check_place_R(row, col + 2)
+        return self.check_place_L(row,col) and self.check_place_M_horizontal(row, col + 1) and self.check_place_R(row, col + 2)
 
     def check_place_1x4_vertical (self, row: int, col: int):
         if self.remaining_ships["1x4"] == 0:
@@ -270,7 +282,7 @@ class Board:
         
         if self.remaining_pieces["M"] < 2: # verificar se temos peças suficientes, porque ao testar M só vai ver se tem 1 duas vezes, e neste caso são precisas duas
             return False
-        return self.check_place_T(row,col) and self.check_place_M(row + 1, col) and self.check_place_M(row + 2, col) and self.check_place_B(row + 3, col)
+        return self.check_place_T(row,col) and self.check_place_M_vertical(row + 1, col) and self.check_place_M_vertical(row + 2, col) and self.check_place_B(row + 3, col)
 
     def check_place_1x4_horizontal (self, row: int, col: int):
         if self.remaining_ships["1x4"] == 0:
@@ -286,7 +298,7 @@ class Board:
         
         if self.remaining_pieces["M"] < 2: #verificar se temos peças suficientes, porque ao testar M só vai ver se tem 1 duas vezes, e neste caso são precisas duas
             return False
-        return self.check_place_L(row,col) and self.check_place_M(row, col + 1) and self.check_place_M(row, col + 2) and self.check_place_R(row, col + 3)
+        return self.check_place_L(row,col) and self.check_place_M_horizontal(row, col + 1) and self.check_place_M_horizontal(row, col + 2) and self.check_place_R(row, col + 3)
 
 
     # insert water around certain pieces
@@ -353,10 +365,14 @@ class Board:
             
         elif piece == '1x2_vertical':
             # place Top piece & Water around it
+            if self.board[row][col] == "T":
+                self.remaining_pieces["TBRL"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row][col] = "T"
             self.insert_water_right_left(row, col)
             self.insert_water_ontop(row, col)
             # place Bottom piece & Water around it
+            if self.board[row + 1][col] == "B":
+                self.remaining_pieces["TBRL"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row + 1][col] = "B"
             self.insert_water_right_left(row + 1, col)
             self.insert_water_below(row + 1, col)
@@ -370,10 +386,14 @@ class Board:
             
         elif piece == '1x2_horizontal':
             # place Left piece & Water around it
+            if self.board[row][col] == "L":
+                self.remaining_pieces["TBRL"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row][col] = "L"
             self.insert_water_ontop_below(row, col)
             self.insert_water_left(row, col)
             # place Right piece & Water around it
+            if self.board[row][col + 1] == "R":
+                self.remaining_pieces["TBRL"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row][col + 1] = "R"
             self.insert_water_ontop_below(row, col + 1)
             self.insert_water_right(row, col + 1)
@@ -387,13 +407,19 @@ class Board:
             
         elif piece == '1x3_vertical':
             # place Top piece & Water around it
+            if self.board[row][col] == "T":
+                self.remaining_pieces["TBRL"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row][col] = "T"
             self.insert_water_right_left(row, col)
             self.insert_water_ontop(row, col)
             # place Middle piece & Water around it
+            if self.board[row + 1][col] == "M":
+                self.remaining_pieces["M"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row + 1][col] = "M"
             self.insert_water_right_left(row + 1, col)
             # place Bottom piece & Water around it
+            if self.board[row + 2][col] == "B":
+                self.remaining_pieces["TBRL"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row + 2][col] = "B"
             self.insert_water_right_left(row + 2, col)
             self.insert_water_below(row + 2, col)
@@ -409,13 +435,19 @@ class Board:
             
         elif piece == '1x3_horizontal':
             # place Left piece & Water around it
+            if self.board[row][col] == "L":
+                self.remaining_pieces["TBRL"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row][col] = "L"
             self.insert_water_ontop_below(row, col)
             self.insert_water_left(row, col)
             # place Middle piece & Water around it
+            if self.board[row][col + 1] == "M":
+                self.remaining_pieces["M"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row][col + 1] = "M"
             self.insert_water_ontop_below(row, col + 1)
             # place Right piece & Water around it
+            if self.board[row][col + 2] == "R":
+                self.remaining_pieces["TBRL"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row][col + 2] = "R"
             self.insert_water_ontop_below(row, col + 2)
             self.insert_water_right(row, col + 2)
@@ -431,16 +463,24 @@ class Board:
             
         elif piece == '1x4_vertical':
             # place Top piece & Water around it
+            if self.board[row][col] == "T":
+                self.remaining_pieces["TBRL"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row][col] = "T"
             self.insert_water_right_left(row, col)
             self.insert_water_ontop(row, col)
             # place Middle piece & Water around it
+            if self.board[row + 1][col] == "M":
+                self.remaining_pieces["M"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row + 1][col] = "M"
             self.insert_water_right_left(row + 1, col)
             # place Middle piece & Water around it
+            if self.board[row + 2][col] == "M":
+                self.remaining_pieces["M"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row + 2][col] = "M"
             self.insert_water_right_left(row + 2, col)
             # place Bottom piece & Water around it
+            if self.board[row + 3][col] == "B":
+                self.remaining_pieces["TBRL"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row + 3][col] = "B"
             self.insert_water_right_left(row + 3, col)
             self.insert_water_below(row + 3, col)
@@ -457,16 +497,24 @@ class Board:
             
         elif piece == '1x4_horizontal':
             # place Left piece & Water around it
+            if self.board[row][col] == "L":
+                self.remaining_pieces["TBRL"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row][col] = "L"
             self.insert_water_ontop_below(row, col)
             self.insert_water_left(row, col)
             # place Middle piece & Water around it
+            if self.board[row][col + 1] == "M":
+                self.remaining_pieces["M"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row][col + 1] = "M"
             self.insert_water_ontop_below(row, col + 1)
             # place Middle piece & Water around it
+            if self.board[row][col + 2] == "M":
+                self.remaining_pieces["M"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row][col + 2] = "M"
             self.insert_water_left(row, col + 2)
             #place Right piece & Water around it
+            if self.board[row][col + 3] == "R":
+                self.remaining_pieces["TBRL"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row][col + 3] = "R"
             self.insert_water_ontop_below(row, col + 3)
             self.insert_water_right(row, col + 3)
@@ -497,15 +545,26 @@ class Bimaru(Problem):
     def actions(self, state: BimaruState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
+        
+        # TODO: DEBUG
+        print("Heuristic Value:")
+        print(state.board.remaining_empty_cells)
+        count = np.count_nonzero(state.board.board == "")
+        print("Actual Number:", count)
+        print(state.board.board)
+        print("\n\n")
+        
+        
+        
         actions = []
         
         # Try to place a Ships (Horizontal and Vertical): 1x1, 1x2, 1x3, 1x4 (Centered on the topmost/left most piece)
-        
+        # TODO: Estamos kind of a ignorar as hints, maybe dava para começar por por nas hints ou assim
         # Start by placing first the bigger pieces and only then place the smaller ones
         if state.board.remaining_ships["1x4"] > 0:
             for row in range(10):
                 for col in range(10):
-                    if state.board.get_value(row, col) == "":# TODO: como é que isto funciona se tenatr colocar encima de uma HINT que ja esta ou de uma outra peça (is that even possible) - assim só nem tenta
+                    if state.board.get_value(row, col) in ["", "T", "L"]:# TODO: como é que isto funciona se tenatr colocar encima de uma HINT que ja esta ou de uma outra peça (is that even possible) - assim só nem tenta
                                                             # como é para por para baixo na vertical ou para a direita na horizontal i guess que da para tentar por algo quando tem T ou L, 
                                                             # mas teria de se ter cuidado para nao fazer overwrite sobre essa peça e depois no remaining pieces subtrair outra
                         # try to plae a 1x4 ship vertivaly (topmost square on current cell)
@@ -561,16 +620,11 @@ class Bimaru(Problem):
         """Retorna True se e só se o estado passado como argumento é
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
         estão preenchidas de acordo com as regras do problema."""
-        print(state.board.board) #TODO: DEBUG
-        print("\n\n")
-        
         return state.board.get_remaining_pieces() == 0
 
 
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
-        print("Heuristic:")
-        print(node.state.board.remaining_empty_cells) # TODO: DEBUG
         return node.state.board.remaining_empty_cells
 
 
