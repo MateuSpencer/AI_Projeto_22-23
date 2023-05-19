@@ -40,6 +40,7 @@ class Board:
         self.board = board
         self.bimaru = bimaru # the bimaru problem object, to access the rows & columns hints
         self.remaining_pieces = remaining_pieces # total number of pieces to be placed
+        self.remaining_ships = {"1x1": 4, "1x2": 3, "1x3": 2 , "1x4": 1} # in practice this init is only called on the first board, the rest are copied, so just the initial values are needed
         self.row_pieces_placed = row_pieces_placed # vector to store how many pieces have been placed in each row
         self.col_pieces_placed = col_pieces_placed # vector to store how many pieces have been placed in each column
         self.fill_completed_row_col()
@@ -189,6 +190,8 @@ class Board:
     horizontal ships have the given coordinate as the left of the ship
     they cant exceed the number of pieces in the row or column given by the hints"""
     def check_place_1x1 (self, row: int, col: int):
+        if self.remaining_ships["1x1"] == 0:
+            return False
         if ((self.row_pieces_placed[row] + 1) > self.bimaru.row_hints[row]):
             return False # if adding 1 piece to this row  exceeds the hint value, invalid placement
         if ((self.col_pieces_placed[col] + 1) > self.bimaru.col_hints[col]):
@@ -198,6 +201,9 @@ class Board:
 
     #TODO: ERRO: quando tenta colocar um barco que excede os limites do tabuleiro, dar logo false
     def check_place_1x2_vertical (self, row: int, col: int):
+        if self.remaining_ships["1x2"] == 0:
+            return False
+        
         if row + 1 > 9:
             return False # cannot exceed board limits
         
@@ -209,6 +215,9 @@ class Board:
         return self.check_place_T(row,col) and self.check_place_B(row - 1, col)
 
     def check_place_1x2_horizontal (self, row: int, col: int):
+        if self.remaining_ships["1x2"] == 0:
+            return False
+        
         if col + 1 > 9:
             return False # cannot exceed board limits
         
@@ -220,6 +229,9 @@ class Board:
         return self.check_place_L(row,col) and self.check_place_R(row, col +1)
 
     def check_place_1x3_vertical (self, row: int, col: int):
+        if self.remaining_ships["1x3"] == 0:
+            return False
+        
         if row + 2 > 9:
             return False # cannot exceed board limits
         
@@ -231,6 +243,9 @@ class Board:
         return self.check_place_T(row,col) and self.check_place_M(row - 1, col) and self.check_place_B(row - 2, col)
 
     def check_place_1x3_horizontal (self, row: int, col: int):
+        if self.remaining_ships["1x3"] == 0:
+            return False
+        
         if col + 2 > 9:
             return False # cannot exceed board limits
         
@@ -242,6 +257,9 @@ class Board:
         return self.check_place_L(row,col) and self.check_place_M(row, col + 1) and self.check_place_R(row, col + 2)
 
     def check_place_1x4_vertical (self, row: int, col: int):
+        if self.remaining_ships["1x4"] == 0:
+            return False
+        
         if row + 3 > 9:
             return False # cannot exceed board limits
         
@@ -255,6 +273,9 @@ class Board:
         return self.check_place_T(row,col) and self.check_place_M(row - 1, col) and self.check_place_M(row - 2, col) and self.check_place_B(row - 3, col)
 
     def check_place_1x4_horizontal (self, row: int, col: int):
+        if self.remaining_ships["1x4"] == 0:
+            return False
+        
         if col + 3 > 9:
             return False # cannot exceed board limits
         
@@ -313,6 +334,7 @@ class Board:
             self.insert_water_ontop_below(row, col)
             self.insert_water_right_left(row, col)
             # decrease count of center pieces & increase count of pieces placed
+            self.remaining_ships["1x1"] -= 1
             self.remaining_pieces["C"] -= 1
             self.row_pieces_placed[row] += 1
             self.col_pieces_placed[col] += 1
@@ -327,6 +349,7 @@ class Board:
             self.insert_water_right_left(row + 1, col)
             self.insert_water_below(row + 1, col)
             # decrease count of edge pieces & increase count of pieces placed
+            self.remaining_ships["1x2"] -= 1
             self.remaining_pieces["TBRL"] -= 2
             self.row_pieces_placed[row] += 1
             self.row_pieces_placed[row + 1] += 1
@@ -342,6 +365,7 @@ class Board:
             self.insert_water_ontop_below(row, col + 1)
             self.insert_water_right(row, col + 1)
             # decrease count of edge pieces & increase count of pieces placed
+            self.remaining_ships["1x2"] -= 1
             self.remaining_pieces["TBRL"] -= 2
             self.row_pieces_placed[row] += 2
             self.col_pieces_placed[col] += 1
@@ -360,6 +384,7 @@ class Board:
             self.insert_water_right_left(row + 2, col)
             self.insert_water_below(row + 2, col)
             # decrease count of edge & middle pieces & increase count of pieces placed
+            self.remaining_ships["1x3"] -= 1
             self.remaining_pieces["TBRL"] -= 2
             self.remaining_pieces["M"] -= 1
             self.row_pieces_placed[row] += 1
@@ -380,6 +405,7 @@ class Board:
             self.insert_water_ontop_below(row, col + 2)
             self.insert_water_right(row, col + 2)
             # decrease count of edge & middle pieces & increase count of pieces placed
+            self.remaining_ships["1x3"] -= 1
             self.remaining_pieces["TBRL"] -= 2
             self.remaining_pieces["M"] -= 1
             self.row_pieces_placed[row] += 3
@@ -403,6 +429,7 @@ class Board:
             self.insert_water_right_left(row + 3, col)
             self.insert_water_below(row + 3, col)
             # decrease count of edge & middle pieces & increase count of pieces placed
+            self.remaining_ships["1x4"] -= 1
             self.remaining_pieces["TBRL"] -= 2
             self.remaining_pieces["M"] -= 2
             self.row_pieces_placed[row] += 1
@@ -427,6 +454,7 @@ class Board:
             self.insert_water_ontop_below(row, col + 3)
             self.insert_water_right(row, col + 3)
             # decrease count of edge & middle pieces & increase count of pieces placed
+            self.remaining_ships["1x4"] -= 1
             self.remaining_pieces["TBRL"] -= 2
             self.remaining_pieces["M"] -= 2
             self.row_pieces_placed[row] += 4
@@ -457,6 +485,7 @@ class Bimaru(Problem):
                 if state.board.get_remaining_pieces() == 0: # Just precaution, if all pieces are placed
                     break
                 if state.board.get_value(row, col) == "": # Only tries to place a piece in an empty cell
+                    # TODO: como é que isto dunciona se tenatr colocar encima de uma HINT que ja esta ou de uma outra peça (is that even possible)
                         #Two possible approaches:
                             # 1. Try to Place an Indicidual Piece: C, M, T, B, R, L
                             # 2. Try to place a Ship (Horizontal and Vertical): 1x1, 1x2, 1x3, 1x4 (Centered on the topmost/left most piece)
