@@ -501,7 +501,7 @@ class Bimaru(Problem):
         # Try to place a Ships (Horizontal and Vertical): 1x1, 1x2, 1x3, 1x4 (Centered on the topmost/left most piece)
         
         # Start by placing first the bigger pieces and only then place the smaller ones
-        if state.board.remaining_pieces["1x4"] > 0:
+        if state.board.remaining_ships["1x4"] > 0:
             for row in range(10):
                 for col in range(10):
                     if state.board.get_value(row, col) == "":# TODO: como é que isto funciona se tenatr colocar encima de uma HINT que ja esta ou de uma outra peça (is that even possible) - assim só nem tenta
@@ -513,7 +513,7 @@ class Bimaru(Problem):
                         # try to plae a 1x4 ship horizontaly (leftmost square on current cell)
                         if state.board.check_place_1x4_horizontal(row,col):
                             actions.append((row, col, "1x4_horizontal"))
-        elif  state.board.remaining_pieces["1x3"] > 0:
+        elif  state.board.remaining_ships["1x3"] > 0:
             for row in range(10):
                 for col in range(10):
                     if state.board.get_value(row, col) == "":
@@ -523,7 +523,7 @@ class Bimaru(Problem):
                         # try to plae a 1x3 ship horizontaly (leftmost square on current cell)
                         if state.board.check_place_1x3_horizontal(row,col):
                             actions.append((row, col, "1x3_horizontal"))
-        elif  state.board.remaining_pieces["1x2"] > 0:
+        elif  state.board.remaining_ships["1x2"] > 0:
             for row in range(10):
                 for col in range(10):
                     if state.board.get_value(row, col) == "":
@@ -533,7 +533,7 @@ class Bimaru(Problem):
                         # try to plae a 1x2 ship horizontaly (leftmost square on current cell)
                         if state.board.check_place_1x2_horizontal(row,col):
                             actions.append((row, col, "1x2_horizontal"))
-        elif  state.board.remaining_pieces["1x1"] > 0:
+        elif  state.board.remaining_ships["1x1"] > 0:
             for row in range(10):
                 for col in range(10):
                     if state.board.get_value(row, col) == "":
@@ -567,8 +567,8 @@ class Bimaru(Problem):
 
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
-        print(node.state.board.get_remaining_empty_cells()) # TODO: DEBUG
-        return node.state.board.get_remaining_empty_cells()
+        print(node.state.board.remaining_empty_cells) # TODO: DEBUG
+        return node.state.board.remaining_empty_cells
 
 
 if __name__ == "__main__":
