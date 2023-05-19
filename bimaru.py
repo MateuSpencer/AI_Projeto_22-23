@@ -497,43 +497,52 @@ class Bimaru(Problem):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
         actions = []
-        for row in range(10):
-            for col in range(10):
-                if state.board.get_remaining_pieces() == 0: # Just precaution, if all pieces are placed
-                    break
-                if state.board.get_value(row, col) == "": # Only tries to place a piece in an empty cell
-                    # TODO: como é que isto dunciona se tenatr colocar encima de uma HINT que ja esta ou de uma outra peça (is that even possible)
-                        #Two possible approaches:
-                            # 1. Try to Place an Indicidual Piece: C, M, T, B, R, L
-                            # 2. Try to place a Ship (Horizontal and Vertical): 1x1, 1x2, 1x3, 1x4 (Centered on the topmost/left most piece)
-                                # TODO: Sugestão da professora: Tentar colocar primeio as peças 4, depois as 3 etc... (porque são as mais restritivas)
-                                # Ou seja, primeiro a arvore expande so as opções de colocações de 4, depois em cada uma dessas expande as opções de colocar as de 3 etc...
-                                    # Não sei onde fazer isso, maybe aqui por logica para tipo, se neste estado/board ainda ha peças 4 por colocar, dar actions so para isso
-                                    # ddepois se ja nao ha peças 4, mas ainda ha peças 3, dar actions so para isso etc...
-                        # Option 2.
-                        # try to plae a 1x1 ship (on current cell)
-                        if state.board.check_place_1x1(row,col):
-                            actions.append((row, col, "1x1"))
-                        # try to plae a 1x2 ship vertivaly (topmost square on current cell)
-                        if state.board.check_place_1x2_vertical(row,col):
-                            actions.append((row, col, "1x2_vertical"))
-                        # try to plae a 1x2 ship horizontaly (leftmost square on current cell)
-                        if state.board.check_place_1x2_horizontal(row,col):
-                            actions.append((row, col, "1x2_horizontal"))
-                        # try to plae a 1x3 ship vertivaly (topmost square on current cell)
-                        if state.board.check_place_1x3_vertical(row,col):
-                            actions.append((row, col, "1x3_vertical"))
-                        # try to plae a 1x3 ship horizontaly (leftmost square on current cell)
-                        if state.board.check_place_1x3_horizontal(row,col):
-                            actions.append((row, col, "1x3_horizontal"))
+        
+        # Try to place a Ships (Horizontal and Vertical): 1x1, 1x2, 1x3, 1x4 (Centered on the topmost/left most piece)
+        
+        # Start by placing first the bigger pieces and only then place the smaller ones
+        if state.board.remaining_pieces["1x4"] > 0:
+            for row in range(10):
+                for col in range(10):
+                    if state.board.get_value(row, col) == "":# TODO: como é que isto funciona se tenatr colocar encima de uma HINT que ja esta ou de uma outra peça (is that even possible) - assim só nem tenta
+                                                            # como é para por para baixo na vertical ou para a direita na horizontal i guess que da para tentar por algo quando tem T ou L, 
+                                                            # mas teria de se ter cuidado para nao fazer overwrite sobre essa peça e depois no remaining pieces subtrair outra
                         # try to plae a 1x4 ship vertivaly (topmost square on current cell)
                         if state.board.check_place_1x4_vertical(row,col):
                             actions.append((row, col, "1x4_vertical"))
                         # try to plae a 1x4 ship horizontaly (leftmost square on current cell)
                         if state.board.check_place_1x4_horizontal(row,col):
                             actions.append((row, col, "1x4_horizontal"))
-
+        elif  state.board.remaining_pieces["1x3"] > 0:
+            for row in range(10):
+                for col in range(10):
+                    if state.board.get_value(row, col) == "":
+                        # try to plae a 1x3 ship vertivaly (topmost square on current cell)
+                        if state.board.check_place_1x3_vertical(row,col):
+                            actions.append((row, col, "1x3_vertical"))
+                        # try to plae a 1x3 ship horizontaly (leftmost square on current cell)
+                        if state.board.check_place_1x3_horizontal(row,col):
+                            actions.append((row, col, "1x3_horizontal"))
+        elif  state.board.remaining_pieces["1x2"] > 0:
+            for row in range(10):
+                for col in range(10):
+                    if state.board.get_value(row, col) == "":
+                        # try to plae a 1x2 ship vertivaly (topmost square on current cell)
+                        if state.board.check_place_1x2_vertical(row,col):
+                            actions.append((row, col, "1x2_vertical"))
+                        # try to plae a 1x2 ship horizontaly (leftmost square on current cell)
+                        if state.board.check_place_1x2_horizontal(row,col):
+                            actions.append((row, col, "1x2_horizontal"))
+        elif  state.board.remaining_pieces["1x1"] > 0:
+            for row in range(10):
+                for col in range(10):
+                    if state.board.get_value(row, col) == "":
+                        # try to plae a 1x1 ship (on current cell)
+                        if state.board.check_place_1x1(row,col):
+                            actions.append((row, col, "1x1"))
+        
         return actions 
+
 
     def result(self, state: BimaruState, action):
         """Retorna o estado resultante de executar a 'action' sobre
@@ -546,15 +555,15 @@ class Bimaru(Problem):
         new_state.board.insert_ship(row, col, ship)
         return new_state
 
+
     def goal_test(self, state: BimaruState):
         """Retorna True se e só se o estado passado como argumento é
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
         estão preenchidas de acordo com as regras do problema."""
-        ######DEBUG############TODO
-        print(state.board.board)
+        print(state.board.board) #TODO: DEBUG
         print("\n\n")
-        ######DEBUG############
         return state.board.get_remaining_pieces() == 0
+
 
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
@@ -572,7 +581,7 @@ if __name__ == "__main__":
     # Retirar a solução a partir do nó resultante,
     goal_node = greedy_search(problem)
     # Imprimir para o standard output no formato indicado.
-    # TODO
+    # TODO: Print Result
     # Replace 'W' with '.'
     # solved_board = np.where(goal_node.state.board  == 'W', '.', goal_node.state.board )
     # print(solved_board)
