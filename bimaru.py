@@ -42,7 +42,7 @@ class Board:
         self.remaining_pieces = remaining_pieces # total number of pieces to be placed
         self.row_pieces_placed = row_pieces_placed # vector to store how many pieces have been placed in each row
         self.col_pieces_placed = col_pieces_placed # vector to store how many pieces have been placed in each column
-
+        self.fill_completed_row_col()
 
     def get_value(self, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
@@ -293,6 +293,17 @@ class Board:
         self.insert_water_left(row, col)
         self.insert_water_right(row, col)
 
+    def fill_completed_row_col(self):
+        """Fills the rows and cacolums tha aslready have the correct number of pieces"""
+        for row in range(10):
+            if self.row_pieces_placed[row] == self.bimaru.row_hints[row]: # fill rows that are completed
+                for col in range(10):
+                    if self.board[row][col] == "":
+                        self.board[row][col] = "W"
+            if self.col_pieces_placed[row] == self.bimaru.col_hints[row]:
+                for col in range(10):
+                    if self.board[col][row] == "":
+                        self.board[col][row] = "W"
     
     def insert_ship(self, row: int, col: int, piece: str):
         """Inserts a ship at the given position, decreases the pieces count & insert water around piece"""
@@ -424,18 +435,18 @@ class Board:
             self.col_pieces_placed[col + 2] += 1
             self.col_pieces_placed[col + 3] += 1
         
-        #TODO: Verificar se completámos completamente uma linha / coluna e preencher com água
+        self.fill_completed_row_col() # Fill rows and columns that are completed with water
 
 
 class Bimaru(Problem):
     def __init__(self, board, row_pieces_placed, col_pieces_placed, remaining_pieces, row_hints, col_hints):
         """O construtor especifica o estado inicial."""
-        board_object = Board(board, row_pieces_placed, col_pieces_placed, remaining_pieces, self) #Criar o Board inicial, passando o problema Bimaru para poder aceder às hints
-        self.state = BimaruState(board_object)
-        super().__init__(self.state)
         # number of positions in the row / column with a ship cell
         self.row_hints = row_hints 
         self.col_hints = col_hints
+        board_object = Board(board, row_pieces_placed, col_pieces_placed, remaining_pieces, self) #Criar o Board inicial, passando o problema Bimaru para poder aceder às hints
+        self.state = BimaruState(board_object)
+        super().__init__(self.state)
 
     def actions(self, state: BimaruState):
         """Retorna uma lista de ações que podem ser executadas a
@@ -445,7 +456,7 @@ class Bimaru(Problem):
             for col in range(10):
                 if state.board.get_remaining_pieces() == 0: # Just precaution, if all pieces are placed
                     break
-                if state.board.get_value(row, col) == "": # Only tries to place a piece in an empty cell
+                if state.board.get_value(row, col) != "W": # Only tries to place a piece in an empty cell
                         #Two possible approaches:
                             # 1. Try to Place an Indicidual Piece: C, M, T, B, R, L
                             # 2. Try to place a Ship (Horizontal and Vertical): 1x1, 1x2, 1x3, 1x4 (Centered on the topmost/left most piece)
@@ -489,8 +500,10 @@ class Bimaru(Problem):
         """Retorna True se e só se o estado passado como argumento é
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
         estão preenchidas de acordo com as regras do problema."""
+        ######DEBUG############TODO
         print(state.board.board)
         print("\n\n")
+        ######DEBUG############
         return state.board.get_remaining_pieces() == 0
 
     def h(self, node: Node):
@@ -498,6 +511,7 @@ class Bimaru(Problem):
         # TODO: possible additions
             # numero de peças preenchidas - sum de row/col_pieces_placed
             # numero de linhas completamente preenchidas
+        print(node.state.board.get_remaining_pieces()) # DEBUG TODO
         return node.state.board.get_remaining_pieces()
 
 
