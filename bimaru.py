@@ -547,20 +547,19 @@ class Bimaru(Problem):
         partir do estado passado como argumento."""
         
         # TODO: DEBUG
-        print("Heuristic Value:")
-        print(state.board.remaining_empty_cells)
+        print("State ID:", state.id)
+        print("Heuristic Value:", state.board.remaining_empty_cells)
         count = np.count_nonzero(state.board.board == "")
-        print("Actual Number:", count)
+        print("Actual Number:", count) #TODO: Problem, should be equal -> algures esta a tirar amais, maybe só contar cada vez que se quer a heuristica? ou would that hide some other problem?
         print(state.board.board)
         print("\n\n")
         
-        
-        
         actions = []
         
-        # Try to place a Ships (Horizontal and Vertical): 1x1, 1x2, 1x3, 1x4 (Centered on the topmost/left most piece)
         # TODO: Estamos kind of a ignorar as hints, maybe dava para começar por por nas hints ou assim
-        # Start by placing first the bigger pieces and only then place the smaller ones
+        
+        # Try to place a Ships (Horizontal and Vertical): 1x1, 1x2, 1x3, 1x4 (Centered on the topmost/left most piece)
+            # Start by placing first the bigger pieces and only then place the smaller ones
         if state.board.remaining_ships["1x4"] > 0:
             for row in range(10):
                 for col in range(10):
@@ -576,7 +575,7 @@ class Bimaru(Problem):
         elif  state.board.remaining_ships["1x3"] > 0:
             for row in range(10):
                 for col in range(10):
-                    if state.board.get_value(row, col) == "":
+                    if state.board.get_value(row, col) in ["", "T", "L"]:
                         # try to plae a 1x3 ship vertivaly (topmost square on current cell)
                         if state.board.check_place_1x3_vertical(row,col):
                             actions.append((row, col, "1x3_vertical"))
@@ -586,7 +585,7 @@ class Bimaru(Problem):
         elif  state.board.remaining_ships["1x2"] > 0:
             for row in range(10):
                 for col in range(10):
-                    if state.board.get_value(row, col) == "":
+                    if state.board.get_value(row, col) in ["", "T", "L"]:
                         # try to plae a 1x2 ship vertivaly (topmost square on current cell)
                         if state.board.check_place_1x2_vertical(row,col):
                             actions.append((row, col, "1x2_vertical"))
