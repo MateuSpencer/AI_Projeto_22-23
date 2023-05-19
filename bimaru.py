@@ -563,9 +563,7 @@ class Bimaru(Problem):
         if state.board.remaining_ships["1x4"] > 0:
             for row in range(10):
                 for col in range(10):
-                    if state.board.get_value(row, col) in ["", "T", "L"]:# TODO: como é que isto funciona se tenatr colocar encima de uma HINT que ja esta ou de uma outra peça (is that even possible) - assim só nem tenta
-                                                            # como é para por para baixo na vertical ou para a direita na horizontal i guess que da para tentar por algo quando tem T ou L, 
-                                                            # mas teria de se ter cuidado para nao fazer overwrite sobre essa peça e depois no remaining pieces subtrair outra
+                    if state.board.get_value(row, col) in ["", "T", "L"]:
                         # try to plae a 1x4 ship vertivaly (topmost square on current cell)
                         if state.board.check_place_1x4_vertical(row,col):
                             actions.append((row, col, "1x4_vertical"))
