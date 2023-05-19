@@ -506,6 +506,10 @@ class Bimaru(Problem):
                         #Two possible approaches:
                             # 1. Try to Place an Indicidual Piece: C, M, T, B, R, L
                             # 2. Try to place a Ship (Horizontal and Vertical): 1x1, 1x2, 1x3, 1x4 (Centered on the topmost/left most piece)
+                                # TODO: Sugestão da professora: Tentar colocar primeio as peças 4, depois as 3 etc... (porque são as mais restritivas)
+                                # Ou seja, primeiro a arvore expande so as opções de colocações de 4, depois em cada uma dessas expande as opções de colocar as de 3 etc...
+                                    # Não sei onde fazer isso, maybe aqui por logica para tipo, se neste estado/board ainda ha peças 4 por colocar, dar actions so para isso
+                                    # ddepois se ja nao ha peças 4, mas ainda ha peças 3, dar actions so para isso etc...
                         # Option 2.
                         # try to plae a 1x1 ship (on current cell)
                         if state.board.check_place_1x1(row,col):
