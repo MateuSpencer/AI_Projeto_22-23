@@ -456,7 +456,7 @@ class Bimaru(Problem):
             for col in range(10):
                 if state.board.get_remaining_pieces() == 0: # Just precaution, if all pieces are placed
                     break
-                if state.board.get_value(row, col) != "W": # Only tries to place a piece in an empty cell
+                if state.board.get_value(row, col) == "": # Only tries to place a piece in an empty cell
                         #Two possible approaches:
                             # 1. Try to Place an Indicidual Piece: C, M, T, B, R, L
                             # 2. Try to place a Ship (Horizontal and Vertical): 1x1, 1x2, 1x3, 1x4 (Centered on the topmost/left most piece)
@@ -511,7 +511,7 @@ class Bimaru(Problem):
         # TODO: possible additions
             # numero de peças preenchidas - sum de row/col_pieces_placed
             # numero de linhas completamente preenchidas
-        print(node.state.board.get_remaining_pieces()) # DEBUG TODO
+        print(node.state.board.get_remaining_pieces()) # DEBUG TOD
         return node.state.board.get_remaining_pieces()
 
 
