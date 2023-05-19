@@ -43,6 +43,7 @@ class Board:
         self.remaining_ships = {"1x1": 4, "1x2": 3, "1x3": 2 , "1x4": 1} # in practice this init is only called on the first board, the rest are copied, so just the initial values are needed
         self.row_pieces_placed = row_pieces_placed # vector to store how many pieces have been placed in each row
         self.col_pieces_placed = col_pieces_placed # vector to store how many pieces have been placed in each column
+        self.remaining_empty_cells = 100 - (22 - self.get_remaining_pieces()) # number of empty cells on the board, after placing hints
         self.fill_completed_row_col()
 
     def get_value(self, row: int, col: int) -> str:
@@ -199,7 +200,6 @@ class Board:
         
         return self.check_place_C(row, col)
 
-    #TODO: ERRO: quando tenta colocar um barco que excede os limites do tabuleiro, dar logo false
     def check_place_1x2_vertical (self, row: int, col: int):
         if self.remaining_ships["1x2"] == 0:
             return False
@@ -293,18 +293,26 @@ class Board:
         """inserts water to the left of the given position"""
         if 0 <= col - 1 <= 9:
             self.board[row][col - 1] = "W"
+            self.remaining_empty_cells -= 1
+
     def insert_water_right (self, row: int, col: int):
         """inserts water to the right of the given position"""
         if 0 <= col + 1 <= 9:
             self.board[row][col + 1] = "W"
+            self.remaining_empty_cells -= 1
+
     def insert_water_below (self, row: int, col: int):
         """inserts water below the given position"""
         if 0 <= row + 1 <= 9:
             self.board[row + 1][col] = "W"
+            self.remaining_empty_cells -= 1
+
     def insert_water_ontop (self, row: int, col: int):
         """inserts water on top of the given position"""
         if 0 <= row - 1 <= 9:
             self.board[row - 1][col] = "W"
+            self.remaining_empty_cells -= 1
+
     def insert_water_ontop_below(self, row: int, col: int):
         """Inserts water on top and below the given position"""
         self.insert_water_below(row, col)
@@ -321,10 +329,12 @@ class Board:
                 for col in range(10):
                     if self.board[row][col] == "":
                         self.board[row][col] = "W"
+                        self.remaining_empty_cells -= 1
             if self.col_pieces_placed[row] == self.bimaru.col_hints[row]:
                 for col in range(10):
                     if self.board[col][row] == "":
                         self.board[col][row] = "W"
+                        self.remaining_empty_cells -= 1
     
     def insert_ship(self, row: int, col: int, piece: str):
         """Inserts a ship at the given position, decreases the pieces count & insert water around piece"""
@@ -336,6 +346,7 @@ class Board:
             # decrease count of center pieces & increase count of pieces placed
             self.remaining_ships["1x1"] -= 1
             self.remaining_pieces["C"] -= 1
+            self.remaining_empty_cells -= 1
             self.row_pieces_placed[row] += 1
             self.col_pieces_placed[col] += 1
             
@@ -351,6 +362,7 @@ class Board:
             # decrease count of edge pieces & increase count of pieces placed
             self.remaining_ships["1x2"] -= 1
             self.remaining_pieces["TBRL"] -= 2
+            self.remaining_empty_cells -= 2
             self.row_pieces_placed[row] += 1
             self.row_pieces_placed[row + 1] += 1
             self.col_pieces_placed[col] += 2
@@ -367,6 +379,7 @@ class Board:
             # decrease count of edge pieces & increase count of pieces placed
             self.remaining_ships["1x2"] -= 1
             self.remaining_pieces["TBRL"] -= 2
+            self.remaining_empty_cells -= 2
             self.row_pieces_placed[row] += 2
             self.col_pieces_placed[col] += 1
             self.col_pieces_placed[col + 1] += 1
@@ -387,6 +400,7 @@ class Board:
             self.remaining_ships["1x3"] -= 1
             self.remaining_pieces["TBRL"] -= 2
             self.remaining_pieces["M"] -= 1
+            self.remaining_empty_cells -= 3
             self.row_pieces_placed[row] += 1
             self.row_pieces_placed[row + 1] += 1
             self.row_pieces_placed[row + 2] += 1
@@ -408,6 +422,7 @@ class Board:
             self.remaining_ships["1x3"] -= 1
             self.remaining_pieces["TBRL"] -= 2
             self.remaining_pieces["M"] -= 1
+            self.remaining_empty_cells -= 3
             self.row_pieces_placed[row] += 3
             self.col_pieces_placed[col] += 1
             self.col_pieces_placed[col + 1] += 1
@@ -432,6 +447,7 @@ class Board:
             self.remaining_ships["1x4"] -= 1
             self.remaining_pieces["TBRL"] -= 2
             self.remaining_pieces["M"] -= 2
+            self.remaining_empty_cells -= 4
             self.row_pieces_placed[row] += 1
             self.row_pieces_placed[row + 1] += 1
             self.row_pieces_placed[row + 2] += 1
@@ -457,6 +473,7 @@ class Board:
             self.remaining_ships["1x4"] -= 1
             self.remaining_pieces["TBRL"] -= 2
             self.remaining_pieces["M"] -= 2
+            self.remaining_empty_cells -= 4
             self.row_pieces_placed[row] += 4
             self.col_pieces_placed[col] += 1
             self.col_pieces_placed[col + 1] += 1
@@ -537,10 +554,8 @@ class Bimaru(Problem):
 
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
-        # TODO: possible additions
-            # numero de celulas vazias -> menos é melhor
-        print(node.state.board.get_remaining_pieces()) # DEBUG TOD
-        return node.state.board.get_remaining_pieces()
+        print(node.state.board.get_remaining_empty_cells()) # TODO: DEBUG
+        return node.state.board.get_remaining_empty_cells()
 
 
 if __name__ == "__main__":
@@ -551,7 +566,7 @@ if __name__ == "__main__":
     print(problem.state.board.board)
     # Usar uma técnica de procura para resolver a instância,
     # Retirar a solução a partir do nó resultante,
-    goal_node = astar_search(problem)
+    goal_node = greedy_search(problem)
     # Imprimir para o standard output no formato indicado.
     # TODO
     # Replace 'W' with '.'
