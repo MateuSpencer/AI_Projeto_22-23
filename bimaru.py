@@ -509,8 +509,7 @@ class Bimaru(Problem):
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
         # TODO: possible additions
-            # numero de peças preenchidas - sum de row/col_pieces_placed
-            # numero de linhas completamente preenchidas
+            # numero de celulas vazias -> menos é melhor
         print(node.state.board.get_remaining_pieces()) # DEBUG TOD
         return node.state.board.get_remaining_pieces()
 
