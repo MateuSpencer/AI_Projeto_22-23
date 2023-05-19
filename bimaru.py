@@ -134,7 +134,7 @@ class Board:
         if above == "C" or below == "C":
             return False
         left, right = self.adjacent_horizontal_values(row, col)
-        if left == "C" or right == "C":
+        if left == "C" or right == "C": #TODO: Problem: se por exemplo esta a ser usada para colocar um vertical, pode ter T ou B encima/Baixo mas nao pode ter algo que nao Empty ou Water ao Lado
             return False
         return True
 
@@ -212,7 +212,7 @@ class Board:
         if ((self.col_pieces_placed[col] + 2) > self.bimaru.col_hints[col]):
             return False # if adding 2 pieces to this column exceeds the hint value, invalid placement
         
-        return self.check_place_T(row,col) and self.check_place_B(row - 1, col)
+        return self.check_place_T(row,col) and self.check_place_B(row + 1, col)
 
     def check_place_1x2_horizontal (self, row: int, col: int):
         if self.remaining_ships["1x2"] == 0:
@@ -240,7 +240,7 @@ class Board:
         if ((self.col_pieces_placed[col] + 3) > self.bimaru.col_hints[col]):
             return False # if adding 3 pieces to this column exceeds the hint value, invalid placement
         
-        return self.check_place_T(row,col) and self.check_place_M(row - 1, col) and self.check_place_B(row - 2, col)
+        return self.check_place_T(row,col) and self.check_place_M(row + 1, col) and self.check_place_B(row + 2, col)
 
     def check_place_1x3_horizontal (self, row: int, col: int):
         if self.remaining_ships["1x3"] == 0:
@@ -270,7 +270,7 @@ class Board:
         
         if self.remaining_pieces["M"] < 2: # verificar se temos peças suficientes, porque ao testar M só vai ver se tem 1 duas vezes, e neste caso são precisas duas
             return False
-        return self.check_place_T(row,col) and self.check_place_M(row - 1, col) and self.check_place_M(row - 2, col) and self.check_place_B(row - 3, col)
+        return self.check_place_T(row,col) and self.check_place_M(row + 1, col) and self.check_place_M(row + 2, col) and self.check_place_B(row + 3, col)
 
     def check_place_1x4_horizontal (self, row: int, col: int):
         if self.remaining_ships["1x4"] == 0:
@@ -287,6 +287,7 @@ class Board:
         if self.remaining_pieces["M"] < 2: #verificar se temos peças suficientes, porque ao testar M só vai ver se tem 1 duas vezes, e neste caso são precisas duas
             return False
         return self.check_place_L(row,col) and self.check_place_M(row, col + 1) and self.check_place_M(row, col + 2) and self.check_place_R(row, col + 3)
+
 
     # insert water around certain pieces
     def insert_water_left (self, row: int, col: int):
@@ -562,11 +563,13 @@ class Bimaru(Problem):
         estão preenchidas de acordo com as regras do problema."""
         print(state.board.board) #TODO: DEBUG
         print("\n\n")
+        
         return state.board.get_remaining_pieces() == 0
 
 
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
+        print("Heuristic:")
         print(node.state.board.remaining_empty_cells) # TODO: DEBUG
         return node.state.board.remaining_empty_cells
 
