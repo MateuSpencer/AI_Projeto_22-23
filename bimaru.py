@@ -24,8 +24,9 @@ from search import (
 class BimaruState:
     state_id = 0
     
-    def __init__(self, board):
+    def __init__(self, board, unfinished_hints):
         self.board = board
+        self.unfinished_hints = unfinished_hints
         self.id = BimaruState.state_id
         BimaruState.state_id += 1
 
@@ -79,6 +80,7 @@ class Board:
         row_pieces_placed = np.zeros(10, dtype=int)
         col_pieces_placed = np.zeros(10, dtype=int)
         hint_counter = 0
+        unfinished_hints = 0
         
         for line in sys.stdin:
             # Split the line into parts by tabs
@@ -98,15 +100,18 @@ class Board:
                     if letter == "C":
                         remaining_pieces["C"] -= 1
                     elif letter == "M":
+                        unfinished_hints += 1
                         remaining_pieces["M"] -= 1
                     elif letter in ["T", "B", "R", "L"]:
+                        unfinished_hints += 1
                         remaining_pieces["TBRL"] -= 1
+                
                 hint_counter -= 1
                 if hint_counter == 0:
                     break
             elif parts[0].isdigit(): 
                 hint_counter = int(parts[0])
-        return board, row_pieces_placed, col_pieces_placed, remaining_pieces, row_hints, col_hints
+        return board, row_pieces_placed, col_pieces_placed, remaining_pieces, row_hints, col_hints, unfinished_hints
 
 
     def get_remaining_pieces(self):
@@ -533,13 +538,13 @@ class Board:
 
 
 class Bimaru(Problem):
-    def __init__(self, board, row_pieces_placed, col_pieces_placed, remaining_pieces, row_hints, col_hints):
+    def __init__(self, board, row_pieces_placed, col_pieces_placed, remaining_pieces, row_hints, col_hints, unfinished_hints):
         """O construtor especifica o estado inicial."""
         # number of positions in the row / column with a ship cell
         self.row_hints = row_hints 
         self.col_hints = col_hints
         board_object = Board(board, row_pieces_placed, col_pieces_placed, remaining_pieces, self) #Criar o Board inicial, passando o problema Bimaru para poder aceder às hints
-        self.state = BimaruState(board_object)
+        self.state = BimaruState(board_object, unfinished_hints)
         super().__init__(self.state)
 
     def actions(self, state: BimaruState):
@@ -556,8 +561,13 @@ class Bimaru(Problem):
         
         actions = []
         
-        # TODO: Estamos kind of a ignorar as hints, maybe dava para começar por por nas hints ou assim
-        
+        # First Fill all Hints
+        if state.unfinished_hints > 0:
+            for row in range(10):
+                for col in range(10):
+                    if state.board.get_value(row, col) in ["T", "B", "L", "R", "M"]:
+                        pass#TODO: Fill Hints
+                    
         # Try to place a Ships (Horizontal and Vertical): 1x1, 1x2, 1x3, 1x4 (Centered on the topmost/left most piece)
             # Start by placing first the bigger pieces and only then place the smaller ones
         if state.board.remaining_ships["1x4"] > 0:
@@ -627,9 +637,9 @@ class Bimaru(Problem):
 
 if __name__ == "__main__":
     # Ler o ficheiro do standard input,
-    board, row_pieces_placed, col_pieces_placed, remaining_pieces, row_hints, col_hints = Board.parse_instance()
+    board, row_pieces_placed, col_pieces_placed, remaining_pieces, row_hints, col_hints, unfinished_hints = Board.parse_instance()
     # Criar uma instância do problema Bimaru,
-    problem = Bimaru(board, row_pieces_placed, col_pieces_placed, remaining_pieces, row_hints, col_hints)
+    problem = Bimaru(board, row_pieces_placed, col_pieces_placed, remaining_pieces, row_hints, col_hints, unfinished_hints)
     print(problem.state.board.board)
     # Usar uma técnica de procura para resolver a instância,
     # Retirar a solução a partir do nó resultante,
