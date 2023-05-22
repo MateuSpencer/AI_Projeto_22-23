@@ -661,7 +661,7 @@ class Board:
             if self.board[row][col + 2] == "M":
                 self.remaining_pieces["M"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row][col + 2] = "M"
-            self.insert_water_left(row, col + 2)
+            self.insert_water_ontop_below(row, col + 2)
             #place Right piece & Water around it
             if self.board[row][col + 3] == "R":
                 self.remaining_pieces["TBRL"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
