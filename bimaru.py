@@ -786,5 +786,9 @@ if __name__ == "__main__":
     # Retirar a solução a partir do nó resultante,
     goal_node = greedy_search(problem)
     # Imprimir para o standard output no formato indicado.
-    solved_board = np.where(goal_node.state.board.board  == 'W', '.', goal_node.state.board.board)
-    print(solved_board)
+    if goal_node != None:
+        solved_board = np.where(goal_node.state.board.board  == 'W', '.', goal_node.state.board.board)
+        print(solved_board)
+    else:
+        print("No solution found")
+
