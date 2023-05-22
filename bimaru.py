@@ -24,9 +24,9 @@ from search import (
 class BimaruState:
     state_id = 0
     
-    def __init__(self, board, unfinished_hints):
+    def __init__(self, board):
         self.board = board
-        self.unfinished_hints = unfinished_hints
+        
         self.id = BimaruState.state_id
         BimaruState.state_id += 1
 
@@ -37,14 +37,14 @@ class BimaruState:
 class Board:
     """Representação interna de um tabuleiro de Bimaru."""
     
-    def __init__(self, board, row_pieces_placed, col_pieces_placed, remaining_pieces, bimaru):
+    def __init__(self, board, row_pieces_placed, col_pieces_placed, remaining_pieces, unfinished_hints, bimaru):
         self.board = board
         self.bimaru = bimaru # the bimaru problem object, to access the rows & columns hints
         self.remaining_pieces = remaining_pieces # total number of pieces to be placed
+        self.unfinished_hints = unfinished_hints
         self.remaining_ships = {"1x1": 4, "1x2": 3, "1x3": 2 , "1x4": 1} # in practice this init is only called on the first board, the rest are copied, so just the initial values are needed
         self.row_pieces_placed = row_pieces_placed # vector to store how many pieces have been placed in each row
         self.col_pieces_placed = col_pieces_placed # vector to store how many pieces have been placed in each column
-        self.remaining_empty_cells = 100 - (22 - self.get_remaining_pieces()) # number of empty cells on the board, after placing hints
         self.fill_completed_row_col()
 
     def get_value(self, row: int, col: int) -> str:
@@ -118,13 +118,14 @@ class Board:
         """Retorna o número de peças que ainda faltam colocar no tabuleiro."""
         return sum(self.remaining_pieces.values())
 
-
+    """Check if specific piece can be placed in a specific position"""
+    
     # A peça C só pode ter ao lado Empty (0) ou Water (W)
     def check_place_C (self, row: int, col: int):
         if self.remaining_pieces["C"] == 0:
             return False
         above, below = self.adjacent_vertical_values(row, col)
-        if above not in ["", "W"] or below not in ["", "W"]: # se ou encima ou em baixo nao for ou W ou empty -> False
+        if above not in ["", "W"] or below not in ["", "W"]:
             return False
         left, right = self.adjacent_horizontal_values(row, col)
         if left not in ["", "W"] or right not in ["", "W"]:
@@ -133,7 +134,7 @@ class Board:
 
     # A peça M vertical só pode ter peças W ou empty de lado ou Top/M Encima e Bottom/M Embaixo
     def check_place_M_vertical (self, row: int, col: int):
-        if self.remaining_pieces["M"] == 0:
+        if self.board[row][col] != "M" and self.remaining_pieces["M"] == 0: # Only needs to check if there are available pieces if the pice is not already placed (as a hint)
             return False
         above, below = self.adjacent_vertical_values(row, col)
         if above not in ["T", "M", ""] or below not in ["B", "M", ""]:
@@ -145,7 +146,7 @@ class Board:
     
     # A peça M horizontal só pode ter peças W ou empty encima ou Left/M Esquerda e Right/M Direita
     def check_place_M_horizontal (self, row: int, col: int):
-        if self.remaining_pieces["M"] == 0:
+        if self.board[row][col] != "M" and self.remaining_pieces["M"] == 0: # Only needs to check if there are available pieces if the pice is not already placed (as a hint)
             return False
         above, below = self.adjacent_vertical_values(row, col)
         if above not in ["", "W"] or below not in ["", "W"]:
@@ -157,7 +158,7 @@ class Board:
 
     # a peça T so pode ter encima e nos lados ou 0 ou W e em baixo pode ter ou M ou B ou 0
     def check_place_T (self, row: int, col: int):
-        if self.remaining_pieces["TBRL"] == 0:
+        if self.board[row][col] != "TLBR" and self.remaining_pieces["TBRL"] == 0: # Only needs to check if there are available pieces if the pice is not already placed (as a hint)
             return False
         above, below = self.adjacent_vertical_values(row, col)
         if above not in ["", "W"] or below not in ["", "M", "B"]:
@@ -168,7 +169,7 @@ class Board:
         return True
     # a peça B so pode ter em baixo e nos lados ou 0 ou W e encima pode ter ou M ou T ou 0
     def check_place_B (self, row: int, col: int):
-        if self.remaining_pieces["TBRL"] == 0:
+        if self.board[row][col] != "TLBR" and self.remaining_pieces["TBRL"] == 0: # Only needs to check if there are available pieces if the pice is not already placed (as a hint)
             return False
         above, below = self.adjacent_vertical_values(row, col)
         if above not in ["", "M", "T"] or below not in ["", "W"]:
@@ -180,7 +181,7 @@ class Board:
 
     # a peça R so pode ter à direita ou encima ou em baixo 0 ou W e à esquerda so pode ter M, L ou 0
     def check_place_R (self, row: int, col: int):
-        if self.remaining_pieces["TBRL"] == 0:
+        if self.board[row][col] != "TLBR" and self.remaining_pieces["TBRL"] == 0: # Only needs to check if there are available pieces if the pice is not already placed (as a hint)
             return False
         above, below = self.adjacent_vertical_values(row, col)
         if above not in ["", "W"] or below not in ["", "W"]:
@@ -192,7 +193,7 @@ class Board:
 
     # a peça L so pode ter à esquerda ou encima ou em baixo 0 ou W e à direita so pode ter M, R ou 0
     def check_place_L (self, row: int, col: int):
-        if self.remaining_pieces["TBRL"] == 0:
+        if self.board[row][col] != "TLBR" and self.remaining_pieces["TBRL"] == 0: # Only needs to check if there are available pieces if the pice is not already placed (as a hint)
             return False
         above, below = self.adjacent_vertical_values(row, col)
         if above not in ["", "W"] or below not in ["", "W"]:
@@ -201,12 +202,13 @@ class Board:
         if left not in ["", "W"] or right not in ["", "M", "R"]:
             return False
         return True
-    
-    # Option2.
-    """Check whether a specific ship can be placed, 
+
+    """
+    Check whether a specific ship can be placed in a given coordinate: 
     vertical ships have the given coordinate as the top of the ship
     horizontal ships have the given coordinate as the left of the ship
-    they cant exceed the number of pieces in the row or column given by the hints"""
+    they cant exceed the number of pieces in the row or column given by the hints, among other restrictions
+    """
     def check_place_1x1 (self, row: int, col: int):
         if self.remaining_ships["1x1"] == 0:
             return False
@@ -224,10 +226,20 @@ class Board:
         if row + 1 > 9:
             return False # cannot exceed board limits
         
-        if ((self.row_pieces_placed[row] + 1) > self.bimaru.row_hints[row]) or ((self.row_pieces_placed[row + 1] + 1) > self.bimaru.row_hints[row + 1]):
-            return False # if adding 1 piece to this row or the one below exceeds the hint value, invalid placement
-        if ((self.col_pieces_placed[col] + 2) > self.bimaru.col_hints[col]):
-            return False # if adding 2 pieces to this column exceeds the hint value, invalid placement
+        # Check if number of pieces in the column will exceed limit
+        pieces_to_be_placed_col = 0
+        if self.board[row][col] == "":
+            pieces_to_be_placed_col += 1
+        if self.board[row + 1][col] == "":
+            pieces_to_be_placed_col += 1
+        if pieces_to_be_placed_col + self.col_pieces_placed[col]  > self.bimaru.col_hints[col]: # if the number of pieces that need to be added to place this ship + the ones that are already placed on the column exceed the column limit -> invalid placement
+            return False
+        
+        # Check if number of pieces in each row will exceed limit
+        if self.board[row][col] == "" and ((self.row_pieces_placed[row] + 1) > self.bimaru.row_hints[row]):
+            return False
+        if self.board[row + 1][col] == "" and ((self.row_pieces_placed[row + 1] + 1) > self.bimaru.row_hints[row + 1]):
+            return False
         
         return self.check_place_T(row,col) and self.check_place_B(row + 1, col)
 
@@ -238,10 +250,20 @@ class Board:
         if col + 1 > 9:
             return False # cannot exceed board limits
         
-        if ((self.row_pieces_placed[row] + 2) > self.bimaru.row_hints[row]):
-            return False # if adding 2 pieces to this row exceeds the hint value, invalid placement
-        if ((self.col_pieces_placed[col] + 1) > self.bimaru.col_hints[col]) or ((self.col_pieces_placed[col + 1] + 1) > self.bimaru.col_hints[col + 1]):
-            return False # if adding 1 piece to this column or the next one to the right exceeds the hint value, invalid placement
+        # Check if number of pieces in the row will exceed limit
+        pieces_to_be_placed_row = 0
+        if self.board[row][col] == "":
+            pieces_to_be_placed_row += 1
+        if self.board[row][col + 1] == "":
+            pieces_to_be_placed_row += 1
+        if pieces_to_be_placed_row + self.row_pieces_placed[row]  > self.bimaru.row_hints[row]: # if the number of pieces that need to be added to place this ship + the ones that are already placed on the row exceed the column limit -> invalid placement
+            return False
+        
+        # Check if number of pieces in each column will exceed limit
+        if self.board[row][col] == "" and ((self.col_pieces_placed[col] + 1) > self.bimaru.col_hints[col]):
+            return False
+        if self.board[row][col + 1] == "" and ((self.col_pieces_placed[col + 1] + 1) > self.bimaru.col_hints[col + 1]):
+            return False
         
         return self.check_place_L(row,col) and self.check_place_R(row, col +1)
 
@@ -252,10 +274,24 @@ class Board:
         if row + 2 > 9:
             return False # cannot exceed board limits
         
-        if ((self.row_pieces_placed[row] + 1) > self.bimaru.row_hints[row]) or ((self.row_pieces_placed[row + 1] + 1) > self.bimaru.row_hints[row + 1]) or ((self.row_pieces_placed[row + 2] + 1) > self.bimaru.row_hints[row + 2]):
-            return False # if adding 1 piece to this row or the two below exceeds the hint value, invalid placement
-        if ((self.col_pieces_placed[col] + 3) > self.bimaru.col_hints[col]):
-            return False # if adding 3 pieces to this column exceeds the hint value, invalid placement
+        # Check if number of pieces in the column will exceed limit
+        pieces_to_be_placed_col = 0
+        if self.board[row][col] == "":
+            pieces_to_be_placed_col += 1
+        if self.board[row + 1][col] == "":
+            pieces_to_be_placed_col += 1
+        if self.board[row + 2][col] == "":
+            pieces_to_be_placed_col += 1
+        if pieces_to_be_placed_col + self.col_pieces_placed[col]  > self.bimaru.col_hints[col]: # if the number of pieces that need to be added to place this ship + the ones that are already placed on the column exceed the column limit -> invalid placement
+            return False
+        
+        # Check if number of pieces in each row will exceed limit
+        if self.board[row][col] == "" and ((self.row_pieces_placed[row] + 1) > self.bimaru.row_hints[row]):
+            return False
+        if self.board[row + 1][col] == "" and ((self.row_pieces_placed[row + 1] + 1) > self.bimaru.row_hints[row + 1]):
+            return False
+        if self.board[row + 2][col] == "" and ((self.row_pieces_placed[row + 2] + 1) > self.bimaru.row_hints[row + 2]):
+            return False
         
         return self.check_place_T(row,col) and self.check_place_M_vertical(row + 1, col) and self.check_place_B(row + 2, col)
 
@@ -266,10 +302,25 @@ class Board:
         if col + 2 > 9:
             return False # cannot exceed board limits
         
-        if ((self.row_pieces_placed[row] + 3) > self.bimaru.row_hints[row]):
-            return False # if adding 3 pieces to this row exceeds the hint value, invalid placement
-        if ((self.col_pieces_placed[col] + 1) > self.bimaru.col_hints[col]) or ((self.col_pieces_placed[col + 1] + 1) > self.bimaru.col_hints[col + 1]) or ((self.col_pieces_placed[col + 2] + 1) > self.bimaru.col_hints[col + 2]):
-            return False # if adding 1 piece to this column or the next two to the right exceeds the hint value, invalid placement
+        
+        # Check if number of pieces in the row will exceed limit
+        pieces_to_be_placed_row = 0
+        if self.board[row][col] == "":
+            pieces_to_be_placed_row += 1
+        if self.board[row][col + 1] == "":
+            pieces_to_be_placed_row += 1
+        if self.board[row][col + 2] == "":
+            pieces_to_be_placed_row += 1
+        if pieces_to_be_placed_row + self.row_pieces_placed[row]  > self.bimaru.row_hints[row]: # if the number of pieces that need to be added to place this ship + the ones that are already placed on the row exceed the column limit -> invalid placement
+            return False
+        
+        # Check if number of pieces in each column will exceed limit
+        if self.board[row][col] == "" and ((self.col_pieces_placed[col] + 1) > self.bimaru.col_hints[col]):
+            return False
+        if self.board[row][col + 1] == "" and ((self.col_pieces_placed[col + 1] + 1) > self.bimaru.col_hints[col + 1]):
+            return False
+        if self.board[row][col + 2] == "" and ((self.col_pieces_placed[col + 2] + 1) > self.bimaru.col_hints[col + 2]):
+            return False
         
         return self.check_place_L(row,col) and self.check_place_M_horizontal(row, col + 1) and self.check_place_R(row, col + 2)
 
@@ -280,13 +331,39 @@ class Board:
         if row + 3 > 9:
             return False # cannot exceed board limits
         
-        if ((self.row_pieces_placed[row] + 1) > self.bimaru.row_hints[row]) or ((self.row_pieces_placed[row + 1] + 1) > self.bimaru.row_hints[row + 1]) or ((self.row_pieces_placed[row + 2] + 1) > self.bimaru.row_hints[row + 2]) or ((self.row_pieces_placed[row + 3] + 1) > self.bimaru.row_hints[row + 3]):
-            return False # if adding 1 piece to this row or the three below exceeds the hint value, invalid placement
-        if ((self.col_pieces_placed[col] + 4) > self.bimaru.col_hints[col]):
-            return False # if adding 4 pieces to this column exceeds the hint value, invalid placement
-        
-        if self.remaining_pieces["M"] < 2: # verificar se temos peças suficientes, porque ao testar M só vai ver se tem 1 duas vezes, e neste caso são precisas duas
+        # Check if number of pieces in the column will exceed limit
+        pieces_to_be_placed_col = 0
+        if self.board[row][col] == "":
+            pieces_to_be_placed_col += 1
+        if self.board[row + 1][col] == "":
+            pieces_to_be_placed_col += 1
+        if self.board[row + 2][col] == "":
+            pieces_to_be_placed_col += 1
+        if self.board[row + 3][col] == "":
+            pieces_to_be_placed_col += 1
+        if pieces_to_be_placed_col + self.col_pieces_placed[col]  > self.bimaru.col_hints[col]: # if the number of pieces that need to be added to place this ship + the ones that are already placed on the column exceed the column limit -> invalid placement
             return False
+        
+        # Check if number of pieces in each row will exceed limit
+        if self.board[row][col] == "" and ((self.row_pieces_placed[row] + 1) > self.bimaru.row_hints[row]):
+            return False
+        if self.board[row + 1][col] == "" and ((self.row_pieces_placed[row + 1] + 1) > self.bimaru.row_hints[row + 1]):
+            return False
+        if self.board[row + 2][col] == "" and ((self.row_pieces_placed[row + 2] + 1) > self.bimaru.row_hints[row + 2]):
+            return False
+        if self.board[row + 3][col] == "" and ((self.row_pieces_placed[row + 3] + 1) > self.bimaru.row_hints[row + 3]):
+            return False
+        
+        # check if there are enough M pieces to be placed if none are alreday placed, (because check place M will only check if there is one piece available 2 times)
+        M1 = self.board[row + 1][col]
+        M2 = self.board[row + 2][col]
+        if M1 != "M" and M2 != "M" and self.remaining_pieces["M"] < 2:
+            return False
+        if M1 != "M" and M2 == "M" and self.remaining_pieces["M"] < 1:
+            return False
+        if M1 == "M" and M2 != "M" and self.remaining_pieces["M"] < 1:
+            return False
+        
         return self.check_place_T(row,col) and self.check_place_M_vertical(row + 1, col) and self.check_place_M_vertical(row + 2, col) and self.check_place_B(row + 3, col)
 
     def check_place_1x4_horizontal (self, row: int, col: int):
@@ -296,40 +373,131 @@ class Board:
         if col + 3 > 9:
             return False # cannot exceed board limits
         
-        if ((self.row_pieces_placed[row] + 4) > self.bimaru.row_hints[row]):
-            return False # if adding 4 pieces to this row exceeds the hint value, invalid placement
-        if ((self.col_pieces_placed[col] + 1) > self.bimaru.col_hints[col]) or ((self.col_pieces_placed[col + 1] + 1) > self.bimaru.col_hints[col + 1]) or ((self.col_pieces_placed[col + 2] + 1) > self.bimaru.col_hints[col + 2]) or ((self.col_pieces_placed[col + 3] + 1) > self.bimaru.col_hints[col + 3]):
-            return False # if adding 1 piece to this column or the next three to the right exceeds the hint value, invalid placement
-        
-        if self.remaining_pieces["M"] < 2: #verificar se temos peças suficientes, porque ao testar M só vai ver se tem 1 duas vezes, e neste caso são precisas duas
+        # Check if number of pieces in the row will exceed limit
+        pieces_to_be_placed_row = 0
+        if self.board[row][col] == "":
+            pieces_to_be_placed_row += 1
+        if self.board[row][col + 1] == "":
+            pieces_to_be_placed_row += 1
+        if self.board[row][col + 2] == "":
+            pieces_to_be_placed_row += 1
+        if self.board[row][col + 3] == "":
+            pieces_to_be_placed_row += 1
+        if pieces_to_be_placed_row + self.row_pieces_placed[row]  > self.bimaru.row_hints[row]: # if the number of pieces that need to be added to place this ship + the ones that are already placed on the row exceed the column limit -> invalid placement
             return False
+        
+        # Check if number of pieces in each column will exceed limit
+        if self.board[row][col] == "" and ((self.col_pieces_placed[col] + 1) > self.bimaru.col_hints[col]):
+            return False
+        if self.board[row][col + 1] == "" and ((self.col_pieces_placed[col + 1] + 1) > self.bimaru.col_hints[col + 1]):
+            return False
+        if self.board[row][col + 2] == "" and ((self.col_pieces_placed[col + 2] + 1) > self.bimaru.col_hints[col + 2]):
+            return False
+        if self.board[row][col + 3] == "" and ((self.col_pieces_placed[col + 3] + 1) > self.bimaru.col_hints[col + 3]):
+            return False
+        
+        # check if there are enough M pieces to be placed if none are alreday placed, (because check place M will only check if there is one piece available 2 times)
+        M1 = self.board[row][col + 1]
+        M2 = self.board[row][col + 2]
+        if M1 != "M" and M2 != "M" and self.remaining_pieces["M"] < 2:
+            return False
+        if M1 != "M" and M2 == "M" and self.remaining_pieces["M"] < 1:
+            return False
+        if M1 == "M" and M2 != "M" and self.remaining_pieces["M"] < 1:
+            return False
+        
         return self.check_place_L(row,col) and self.check_place_M_horizontal(row, col + 1) and self.check_place_M_horizontal(row, col + 2) and self.check_place_R(row, col + 3)
 
+
+    def hint_actions (self):
+        actions = []
+        
+        for row in range(10):
+            for col in range(10):
+                if self.get_value(row, col) in ["T", "B", "L", "R", "M"]:
+                    if self.board[row][col] == "T": # Try valid Ship placements around an T piece
+                        if self.remaining_ships["1x4"] > 0:
+                            if self.check_place_1x4_vertical(row,col):
+                                actions.append((row, col, "1x4_vertical", "hint"))
+                        if self.remaining_ships["1x3"] > 0:
+                            if self.check_place_1x3_vertical(row,col):
+                                actions.append((row, col, "1x3_vertical", "hint"))
+                        if self.remaining_ships["1x2"] > 0:
+                            if self.check_place_1x2_vertical(row,col):
+                                actions.append((row, col, "1x2_vertical", "hint"))
+                    
+                    elif self.board[row][col] == "L": # Try valid Ship placements around an L piece
+                        if self.remaining_ships["1x4"] > 0:
+                            if self.check_place_1x4_horizontal(row,col):
+                                actions.append((row, col, "1x4_horizontal", "hint"))
+                        if self.remaining_ships["1x3"] > 0:
+                            if self.check_place_1x3_horizontal(row,col):
+                                actions.append((row, col, "1x3_horizontal", "hint"))
+                        if self.remaining_ships["1x2"] > 0:
+                            if self.check_place_1x2_horizontal(row,col):
+                                actions.append((row, col, "1x2_horizontal", "hint"))
+                    
+                    elif self.board[row][col] == "B": # Try valid Ship placements around a B piece
+                        if self.remaining_ships["1x4"] > 0:
+                            if self.check_place_1x4_vertical(row - 3,col):
+                                actions.append((row - 3, col, "1x4_vertical", "hint"))
+                        if self.remaining_ships["1x3"] > 0:
+                            if self.check_place_1x3_vertical(row - 2,col):
+                                actions.append((row - 2, col, "1x3_vertical", "hint"))
+                        if self.remaining_ships["1x2"] > 0:
+                            if self.check_place_1x2_vertical(row - 1,col):
+                                actions.append((row - 1, col, "1x2_vertical", "hint"))
+                    
+                    elif self.board[row][col] == "R": # Try valid Ship placements around a R piece
+                        if self.remaining_ships["1x4"] > 0:
+                            if self.check_place_1x4_horizontal(row,col - 3):
+                                actions.append((row, col - 3, "1x4_horizontal", "hint"))
+                        if self.remaining_ships["1x3"] > 0:
+                            if self.check_place_1x3_horizontal(row,col - 2):
+                                actions.append((row, col - 2, "1x3_horizontal", "hint"))
+                        if self.remaining_ships["1x2"] > 0:
+                            if self.check_place_1x2_horizontal(row,col - 1):
+                                actions.append((row, col - 1, "1x2_horizontal", "hint"))
+                    
+                    elif self.board[row][col] == "M": # Try valid Ship placements around a M piece
+                        if self.remaining_ships["1x4"] > 0:
+                            if self.check_place_1x4_vertical(row - 1,col):
+                                actions.append((row - 1, col, "1x4_vertical", "hint"))
+                            if self.check_place_1x4_vertical(row - 2,col):
+                                actions.append((row - 2, col, "1x4_vertical", "hint"))
+                            
+                            if self.check_place_1x4_horizontal(row,col - 2):
+                                actions.append((row, col - 2, "1x4_horizontal", "hint"))
+                            if self.check_place_1x4_horizontal(row,col - 1):
+                                actions.append((row, col - 1, "1x4_horizontal", "hint"))
+                        if self.remaining_ships["1x3"] > 0:
+                            if self.check_place_1x3_vertical(row - 1,col):
+                                actions.append((row - 1, col, "1x3_vertical", "hint"))
+                            if self.check_place_1x3_horizontal(row,col - 1):
+                                actions.append((row, col - 1, "1x3_horizontal", "hint"))
+        
+        return actions
+    
 
     # insert water around certain pieces
     def insert_water_left (self, row: int, col: int):
         """inserts water to the left of the given position"""
         if 0 <= col - 1 <= 9:
             self.board[row][col - 1] = "W"
-            self.remaining_empty_cells -= 1
-
     def insert_water_right (self, row: int, col: int):
         """inserts water to the right of the given position"""
         if 0 <= col + 1 <= 9:
             self.board[row][col + 1] = "W"
-            self.remaining_empty_cells -= 1
 
     def insert_water_below (self, row: int, col: int):
         """inserts water below the given position"""
         if 0 <= row + 1 <= 9:
             self.board[row + 1][col] = "W"
-            self.remaining_empty_cells -= 1
 
     def insert_water_ontop (self, row: int, col: int):
         """inserts water on top of the given position"""
         if 0 <= row - 1 <= 9:
             self.board[row - 1][col] = "W"
-            self.remaining_empty_cells -= 1
 
     def insert_water_ontop_below(self, row: int, col: int):
         """Inserts water on top and below the given position"""
@@ -341,18 +509,16 @@ class Board:
         self.insert_water_right(row, col)
 
     def fill_completed_row_col(self):
-        """Fills the rows and cacolums tha aslready have the correct number of pieces"""
+        """Fills the rows and colums that already have the correct number of pieces"""
         for row in range(10):
             if self.row_pieces_placed[row] == self.bimaru.row_hints[row]: # fill rows that are completed
                 for col in range(10):
                     if self.board[row][col] == "":
                         self.board[row][col] = "W"
-                        self.remaining_empty_cells -= 1
             if self.col_pieces_placed[row] == self.bimaru.col_hints[row]:
                 for col in range(10):
                     if self.board[col][row] == "":
                         self.board[col][row] = "W"
-                        self.remaining_empty_cells -= 1
     
     def insert_ship(self, row: int, col: int, piece: str):
         """Inserts a ship at the given position, decreases the pieces count & insert water around piece"""
@@ -364,7 +530,6 @@ class Board:
             # decrease count of center pieces & increase count of pieces placed
             self.remaining_ships["1x1"] -= 1
             self.remaining_pieces["C"] -= 1
-            self.remaining_empty_cells -= 1
             self.row_pieces_placed[row] += 1
             self.col_pieces_placed[col] += 1
             
@@ -384,7 +549,6 @@ class Board:
             # decrease count of edge pieces & increase count of pieces placed
             self.remaining_ships["1x2"] -= 1
             self.remaining_pieces["TBRL"] -= 2
-            self.remaining_empty_cells -= 2
             self.row_pieces_placed[row] += 1
             self.row_pieces_placed[row + 1] += 1
             self.col_pieces_placed[col] += 2
@@ -405,7 +569,6 @@ class Board:
             # decrease count of edge pieces & increase count of pieces placed
             self.remaining_ships["1x2"] -= 1
             self.remaining_pieces["TBRL"] -= 2
-            self.remaining_empty_cells -= 2
             self.row_pieces_placed[row] += 2
             self.col_pieces_placed[col] += 1
             self.col_pieces_placed[col + 1] += 1
@@ -432,7 +595,6 @@ class Board:
             self.remaining_ships["1x3"] -= 1
             self.remaining_pieces["TBRL"] -= 2
             self.remaining_pieces["M"] -= 1
-            self.remaining_empty_cells -= 3
             self.row_pieces_placed[row] += 1
             self.row_pieces_placed[row + 1] += 1
             self.row_pieces_placed[row + 2] += 1
@@ -460,7 +622,6 @@ class Board:
             self.remaining_ships["1x3"] -= 1
             self.remaining_pieces["TBRL"] -= 2
             self.remaining_pieces["M"] -= 1
-            self.remaining_empty_cells -= 3
             self.row_pieces_placed[row] += 3
             self.col_pieces_placed[col] += 1
             self.col_pieces_placed[col + 1] += 1
@@ -493,7 +654,6 @@ class Board:
             self.remaining_ships["1x4"] -= 1
             self.remaining_pieces["TBRL"] -= 2
             self.remaining_pieces["M"] -= 2
-            self.remaining_empty_cells -= 4
             self.row_pieces_placed[row] += 1
             self.row_pieces_placed[row + 1] += 1
             self.row_pieces_placed[row + 2] += 1
@@ -527,7 +687,6 @@ class Board:
             self.remaining_ships["1x4"] -= 1
             self.remaining_pieces["TBRL"] -= 2
             self.remaining_pieces["M"] -= 2
-            self.remaining_empty_cells -= 4
             self.row_pieces_placed[row] += 4
             self.col_pieces_placed[col] += 1
             self.col_pieces_placed[col + 1] += 1
@@ -543,8 +702,8 @@ class Bimaru(Problem):
         # number of positions in the row / column with a ship cell
         self.row_hints = row_hints 
         self.col_hints = col_hints
-        board_object = Board(board, row_pieces_placed, col_pieces_placed, remaining_pieces, self) #Criar o Board inicial, passando o problema Bimaru para poder aceder às hints
-        self.state = BimaruState(board_object, unfinished_hints)
+        board_object = Board(board, row_pieces_placed, col_pieces_placed, remaining_pieces, unfinished_hints, self) #Criar o Board inicial, passando o problema Bimaru para poder aceder às hints
+        self.state = BimaruState(board_object)
         super().__init__(self.state)
 
     def actions(self, state: BimaruState):
@@ -553,60 +712,52 @@ class Bimaru(Problem):
         
         # TODO: DEBUG
         print("State ID:", state.id)
-        print("Heuristic Value:", state.board.remaining_empty_cells)
         count = np.count_nonzero(state.board.board == "")
-        print("Actual Number:", count) #TODO: Problem, should be equal -> algures esta a tirar amais, maybe só contar cada vez que se quer a heuristica? ou would that hide some other problem?
+        print("Empty cells heuristic:", count)
+        print("Remaining Pieces:", state.board.get_remaining_pieces())
+        print("Remaining Ships:", state.board.remaining_ships)
+        
         print(state.board.board)
         print("\n\n")
         
         actions = []
         
         # First Fill all Hints
-        if state.unfinished_hints > 0:
-            for row in range(10):
-                for col in range(10):
-                    if state.board.get_value(row, col) in ["T", "B", "L", "R", "M"]:
-                        pass#TODO: Fill Hints
-                    
-        # Try to place a Ships (Horizontal and Vertical): 1x1, 1x2, 1x3, 1x4 (Centered on the topmost/left most piece)
-            # Start by placing first the bigger pieces and only then place the smaller ones
-        if state.board.remaining_ships["1x4"] > 0:
-            for row in range(10):
-                for col in range(10):
-                    if state.board.get_value(row, col) in ["", "T", "L"]:
+        if state.board.unfinished_hints > 0:
+            actions = state.board.hint_actions()
+            return actions
+        
+        # After placing all hints, try to place ships on empty cells
+            # Try to place a Ships (Horizontal and Vertical): 1x1, 1x2, 1x3, 1x4 (Centered on the topmost/left most piece)
+                # Start by placing first the bigger pieces and only then place the smaller ones
+        for row in range(10):
+            for col in range(10):
+                if state.board.get_value(row, col) == "":
+                    if state.board.remaining_ships["1x4"] > 0:
                         # try to plae a 1x4 ship vertivaly (topmost square on current cell)
                         if state.board.check_place_1x4_vertical(row,col):
-                            actions.append((row, col, "1x4_vertical"))
+                            actions.append((row, col, "1x4_vertical", "empty"))
                         # try to plae a 1x4 ship horizontaly (leftmost square on current cell)
                         if state.board.check_place_1x4_horizontal(row,col):
-                            actions.append((row, col, "1x4_horizontal"))
-        elif  state.board.remaining_ships["1x3"] > 0:
-            for row in range(10):
-                for col in range(10):
-                    if state.board.get_value(row, col) in ["", "T", "L"]:
+                            actions.append((row, col, "1x4_horizontal", "empty"))
+                    elif  state.board.remaining_ships["1x3"] > 0:
                         # try to plae a 1x3 ship vertivaly (topmost square on current cell)
                         if state.board.check_place_1x3_vertical(row,col):
-                            actions.append((row, col, "1x3_vertical"))
+                            actions.append((row, col, "1x3_vertical", "empty"))
                         # try to plae a 1x3 ship horizontaly (leftmost square on current cell)
                         if state.board.check_place_1x3_horizontal(row,col):
-                            actions.append((row, col, "1x3_horizontal"))
-        elif  state.board.remaining_ships["1x2"] > 0:
-            for row in range(10):
-                for col in range(10):
-                    if state.board.get_value(row, col) in ["", "T", "L"]:
+                            actions.append((row, col, "1x3_horizontal", "empty"))
+                    elif  state.board.remaining_ships["1x2"] > 0:
                         # try to plae a 1x2 ship vertivaly (topmost square on current cell)
                         if state.board.check_place_1x2_vertical(row,col):
-                            actions.append((row, col, "1x2_vertical"))
+                            actions.append((row, col, "1x2_vertical", "empty"))
                         # try to plae a 1x2 ship horizontaly (leftmost square on current cell)
                         if state.board.check_place_1x2_horizontal(row,col):
-                            actions.append((row, col, "1x2_horizontal"))
-        elif  state.board.remaining_ships["1x1"] > 0:
-            for row in range(10):
-                for col in range(10):
-                    if state.board.get_value(row, col) == "":
+                            actions.append((row, col, "1x2_horizontal", "empty"))
+                    elif  state.board.remaining_ships["1x1"] > 0:
                         # try to plae a 1x1 ship (on current cell)
                         if state.board.check_place_1x1(row,col):
-                            actions.append((row, col, "1x1"))
+                            actions.append((row, col, "1x1", "empty"))
         
         return actions 
 
@@ -616,9 +767,11 @@ class Bimaru(Problem):
         'state' passado como argumento. A ação a executar deve ser uma
         das presentes na lista obtida pela execução de
         self.actions(state)."""
-        row, col, ship = action
+        row, col, ship, type = action
         new_board = copy.deepcopy(state.board)
         new_state = BimaruState(new_board)
+        if type == "hint":
+            new_state.board.unfinished_hints -= 1
         new_state.board.insert_ship(row, col, ship)
         return new_state
 
@@ -632,7 +785,7 @@ class Bimaru(Problem):
 
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
-        return node.state.board.remaining_empty_cells
+        return np.count_nonzero(node.state.board.board == "")  #TODO: Would be faster if it kept a count
 
 
 if __name__ == "__main__":
