@@ -710,17 +710,13 @@ class Bimaru(Problem):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
         
-        # TODO: DEBUG
-        print("State ID:", state.id)
+        actions = []
+        
+        print("\n\n")
+        print("CHOSEN STATE ID:", state.id)
         count = np.count_nonzero(state.board.board == "")
         print("Empty cells heuristic:", count)
-        print("Remaining Pieces:", state.board.get_remaining_pieces())
-        print("Remaining Ships:", state.board.remaining_ships)
-        
-        print(state.board.board)
         print("\n\n")
-        
-        actions = []
         
         # First Fill all Hints
         if state.board.unfinished_hints > 0:
@@ -773,6 +769,15 @@ class Bimaru(Problem):
         if type == "hint":
             new_state.board.unfinished_hints -= 1
         new_state.board.insert_ship(row, col, ship)
+        
+        # TODO: DEBUG
+        print("State ID:", new_state.id)
+        count = np.count_nonzero(new_state.board.board == "")
+        print("Empty cells heuristic:", count)
+        print("Remaining Pieces:", new_state.board.get_remaining_pieces())
+        print("Remaining Ships:", new_state.board.remaining_ships)
+        print(new_state.board.board)
+        print("\n\n")
         return new_state
 
 
