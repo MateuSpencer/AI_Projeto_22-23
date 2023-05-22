@@ -692,11 +692,14 @@ class Bimaru(Problem):
         
         actions = []
         
+        """
+        # TODO: Debug
         print("\n\n")
         print("CHOSEN STATE ID:", state.id)
         count = np.count_nonzero(state.board.board == "")
         print("Empty cells heuristic:", count)
         print("\n\n")
+        """
         
         # First Fill all Hints
         if state.board.unfinished_hints > 0:
@@ -749,7 +752,7 @@ class Bimaru(Problem):
         if type == "hint":
             new_state.board.unfinished_hints -= 1
         new_state.board.insert_ship(row, col, ship)
-        
+        """
         # TODO: DEBUG
         print("State ID:", new_state.id)
         count = np.count_nonzero(new_state.board.board == "")
@@ -758,6 +761,7 @@ class Bimaru(Problem):
         print("Remaining Ships:", new_state.board.remaining_ships)
         print(new_state.board.board)
         print("\n\n")
+        """
         return new_state
 
 
@@ -778,12 +782,9 @@ if __name__ == "__main__":
     board, remaining_pieces, row_hints, col_hints, unfinished_hints = Board.parse_instance()
     # Criar uma instância do problema Bimaru,
     problem = Bimaru(board, remaining_pieces, row_hints, col_hints, unfinished_hints)
-    print(problem.state.board.board)
     # Usar uma técnica de procura para resolver a instância,
     # Retirar a solução a partir do nó resultante,
     goal_node = greedy_search(problem)
     # Imprimir para o standard output no formato indicado.
-    # TODO: Print Result
-    # Replace 'W' with '.'
-    # solved_board = np.where(goal_node.state.board  == 'W', '.', goal_node.state.board )
-    # print(solved_board)
+    solved_board = np.where(goal_node.state.board.board  == 'W', '.', goal_node.state.board.board)
+    print(solved_board)
