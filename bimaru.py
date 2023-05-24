@@ -780,6 +780,7 @@ class Bimaru(Problem):
 if __name__ == "__main__":
     # Ler o ficheiro do standard input,
     board, remaining_pieces, row_hints, col_hints, unfinished_hints = Board.parse_instance()
+    initial_board = copy.deepcopy(board)
     # Criar uma instância do problema Bimaru,
     problem = Bimaru(board, remaining_pieces, row_hints, col_hints, unfinished_hints)
     # Usar uma técnica de procura para resolver a instância,
@@ -788,7 +789,14 @@ if __name__ == "__main__":
     # Imprimir para o standard output no formato indicado.
     if goal_node != None:
         solved_board = np.where(goal_node.state.board.board  == 'W', '.', goal_node.state.board.board)
-        print(solved_board)
+        for i in range(10):
+            for j in range(10):
+                if solved_board[i][j] != '.' and (initial_board[i][j] == '' or initial_board[i][j] == 'W'):
+                    solved_board[i][j] = solved_board[i][j].lower()
+                elif initial_board[i][j] != '' and initial_board[i][j] != 'W':
+                    solved_board[i][j] = initial_board[i][j]
+                print(solved_board[i][j], end='')
+            print(end='\n')
     else:
         print("No solution found")
 
