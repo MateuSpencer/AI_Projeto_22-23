@@ -692,14 +692,12 @@ class Bimaru(Problem):
         
         actions = []
         
-        """
-        # TODO: Debug
-        print("\n\n")
-        print("CHOSEN STATE ID:", state.id)
-        count = np.count_nonzero(state.board.board == "")
-        print("Empty cells heuristic:", count)
-        print("\n\n")
-        """
+        # # TODO: Debug
+        # print("\n\n")
+        # print("CHOSEN STATE ID:", state.id)
+        # count = np.count_nonzero(state.board.board == "")
+        # print("Empty cells heuristic:", count)
+        # print("\n\n")
         
         # First Fill all Hints
         if state.board.unfinished_hints > 0:
@@ -737,7 +735,6 @@ class Bimaru(Problem):
                         # try to plae a 1x1 ship (on current cell)
                         if state.board.check_place_1x1(row,col):
                             actions.append((row, col, "1x1", "empty"))
-        
         return actions 
 
 
@@ -785,15 +782,15 @@ if __name__ == "__main__":
     problem = Bimaru(board, remaining_pieces, row_hints, col_hints, unfinished_hints)
     # Usar uma técnica de procura para resolver a instância,
     # Retirar a solução a partir do nó resultante,
-    goal_node = greedy_search(problem)
+    goal_node = astar_search(problem)
     # Imprimir para o standard output no formato indicado.
     if goal_node != None:
         solved_board = np.where(goal_node.state.board.board  == 'W', '.', goal_node.state.board.board)
         for i in range(10):
             for j in range(10):
-                if solved_board[i][j] != '.' and (initial_board[i][j] == '' or initial_board[i][j] == 'W'):
+                if solved_board[i][j] != '.' and initial_board[i][j] == '':
                     solved_board[i][j] = solved_board[i][j].lower()
-                elif initial_board[i][j] != '' and initial_board[i][j] != 'W':
+                elif initial_board[i][j] != '':
                     solved_board[i][j] = initial_board[i][j]
                 print(solved_board[i][j], end='')
             print(end='\n')
