@@ -87,7 +87,7 @@ class Board:
         
         board = np.zeros((10, 10), dtype=str)
         hint_counter = 0
-        unfinished_hints = 0
+        unfinished_hints = []
         
         for line in sys.stdin:
             # Split the line into parts by tabs
@@ -106,10 +106,10 @@ class Board:
                         remaining_pieces["C"] -= 1
                         remaining_ships["1x1"] -= 1
                     elif letter == "M":
-                        unfinished_hints += 1
+                        unfinished_hints.append((row, col))
                         remaining_pieces["M"] -= 1
                     elif letter in ["T", "B", "R", "L"]:
-                        unfinished_hints += 1
+                        unfinished_hints.append((row, col))
                         remaining_pieces["TBRL"] -= 1
                 
                 hint_counter -= 1
@@ -418,141 +418,141 @@ class Board:
     def hint_actions (self):
         actions = []
         
-        for row in range(10):
-            for col in range(10):
-                if self.get_value(row, col) in ["T", "B", "L", "R", "M"]:
-                    if self.board[row][col] == "T": # Try valid Ship placements around an T piece
-                        if self.remaining_ships["1x4"] > 0:
-                            if self.check_place_1x4_vertical(row,col):
-                                new_action = (row, col, "1x4_vertical", "hint")
-                                if new_action not in actions:
-                                    actions.append(new_action)
-                                else:
-                                    self.unfinished_hints -= 1
-                        if self.remaining_ships["1x3"] > 0:
-                            if self.check_place_1x3_vertical(row,col):
-                                new_action = (row, col, "1x3_vertical", "hint")
-                                if new_action not in actions:
-                                    actions.append(new_action)
-                                else:
-                                    self.unfinished_hints -= 1
-                        if self.remaining_ships["1x2"] > 0:
-                            if self.check_place_1x2_vertical(row,col):
-                                new_action = (row, col, "1x2_vertical", "hint")
-                                if new_action not in actions:
-                                    actions.append(new_action)
-                                else:
-                                    self.unfinished_hints -= 1
-                    
-                    elif self.board[row][col] == "L": # Try valid Ship placements around an L piece
-                        if self.remaining_ships["1x4"] > 0:
-                            if self.check_place_1x4_horizontal(row,col):
-                                new_action = (row, col, "1x4_horizontal", "hint")
-                                if new_action not in actions:
-                                    actions.append(new_action)
-                                else:
-                                    self.unfinished_hints -= 1
-                        if self.remaining_ships["1x3"] > 0:
-                            if self.check_place_1x3_horizontal(row,col):
-                                new_action = (row, col, "1x3_horizontal", "hint")
-                                if new_action not in actions:
-                                    actions.append(new_action)
-                                else:
-                                    self.unfinished_hints -= 1
-                        if self.remaining_ships["1x2"] > 0:
-                            if self.check_place_1x2_horizontal(row,col):
-                                new_action = (row, col, "1x2_horizontal", "hint")
-                                if new_action not in actions:
-                                    actions.append(new_action)
-                                else:
-                                    self.unfinished_hints -= 1
-                    
-                    elif self.board[row][col] == "B": # Try valid Ship placements around a B piece
-                        if self.remaining_ships["1x4"] > 0:
-                            if self.check_place_1x4_vertical(row - 3,col):
-                                new_action = (row - 3, col, "1x4_vertical", "hint")
-                                if new_action not in actions:
-                                    actions.append(new_action)
-                                else:
-                                    self.unfinished_hints -= 1
-                        if self.remaining_ships["1x3"] > 0:
-                            if self.check_place_1x3_vertical(row - 2,col):
-                                new_action = (row - 2, col, "1x3_vertical", "hint")
-                                if new_action not in actions:
-                                    actions.append(new_action)
-                                else:
-                                    self.unfinished_hints -= 1
-                        if self.remaining_ships["1x2"] > 0:
-                            if self.check_place_1x2_vertical(row - 1,col):
-                                new_action = (row - 1, col, "1x2_vertical", "hint")
-                                if new_action not in actions:
-                                    actions.append(new_action)
-                                else:
-                                    self.unfinished_hints -= 1
-                    
-                    elif self.board[row][col] == "R": # Try valid Ship placements around a R piece
-                        if self.remaining_ships["1x4"] > 0:
-                            if self.check_place_1x4_horizontal(row,col - 3):
-                                new_action = (row, col - 3, "1x4_horizontal", "hint")
-                                if new_action not in actions:
-                                    actions.append(new_action)
-                                else:
-                                    self.unfinished_hints -= 1
-                        if self.remaining_ships["1x3"] > 0:
-                            if self.check_place_1x3_horizontal(row,col - 2):
-                                new_action = (row, col - 2, "1x3_horizontal", "hint")
-                                if new_action not in actions:
-                                    actions.append(new_action)
-                                else:
-                                    self.unfinished_hints -= 1
-                        if self.remaining_ships["1x2"] > 0:
-                            if self.check_place_1x2_horizontal(row,col - 1):
-                                new_action = (row, col - 1, "1x2_horizontal", "hint")
-                                if new_action not in actions:
-                                    actions.append(new_action)
-                                else:
-                                    self.unfinished_hints -= 1
-                    
-                    elif self.board[row][col] == "M": # Try valid Ship placements around a M piece
-                        if self.remaining_ships["1x4"] > 0:
-                            if self.check_place_1x4_vertical(row - 1,col):
-                                new_action = (row - 1, col, "1x4_vertical", "hint")
-                                if new_action not in actions:
-                                    actions.append(new_action)
-                                else:
-                                    self.unfinished_hints -= 1
-                            if self.check_place_1x4_vertical(row - 2,col):
-                                new_action = (row - 2, col, "1x4_vertical", "hint")
-                                if new_action not in actions:
-                                    actions.append(new_action)
-                                else:
-                                    self.unfinished_hints -= 1
-                            
-                            if self.check_place_1x4_horizontal(row,col - 2):
-                                new_action = (row, col - 2, "1x4_horizontal", "hint")
-                                if new_action not in actions:
-                                    actions.append(new_action)
-                                else:
-                                    self.unfinished_hints -= 1
-                            if self.check_place_1x4_horizontal(row,col - 1):
-                                new_action = (row, col - 1, "1x4_horizontal", "hint")
-                                if new_action not in actions:
-                                    actions.append(new_action)
-                                else:
-                                    self.unfinished_hints -= 1
-                        if self.remaining_ships["1x3"] > 0:
-                            if self.check_place_1x3_vertical(row - 1,col):
-                                new_action = (row - 1, col, "1x3_vertical", "hint")
-                                if new_action not in actions:
-                                    actions.append(new_action)
-                                else:
-                                    self.unfinished_hints -= 1
-                            if self.check_place_1x3_horizontal(row,col - 1):
-                                new_action = (row, col - 1, "1x3_horizontal", "hint")
-                                if new_action not in actions:
-                                    actions.append(new_action)
-                                else:
-                                    self.unfinished_hints -= 1
+        for hint in self.unfinished_hints:
+            row, col = hint
+            if self.get_value(row, col) in ["T", "B", "L", "R", "M"]:
+                if self.board[row][col] == "T": # Try valid Ship placements around an T piece
+                    if self.remaining_ships["1x4"] > 0:
+                        if self.check_place_1x4_vertical(row,col):
+                            new_action = (row, col, "1x4_vertical", "hint", row, col)
+                            if new_action not in actions:
+                                actions.append(new_action)
+                            else:
+                                self.unfinished_hints.remove(row, col)
+                    if self.remaining_ships["1x3"] > 0:
+                        if self.check_place_1x3_vertical(row,col):
+                            new_action = (row, col, "1x3_vertical", "hint", row, col)
+                            if new_action not in actions:
+                                actions.append(new_action)
+                            else:
+                                self.unfinished_hints.remove(row, col)
+                    if self.remaining_ships["1x2"] > 0:
+                        if self.check_place_1x2_vertical(row,col):
+                            new_action = (row, col, "1x2_vertical", "hint", row, col)
+                            if new_action not in actions:
+                                actions.append(new_action)
+                            else:
+                                self.unfinished_hints.remove(row, col)
+                
+                elif self.board[row][col] == "L": # Try valid Ship placements around an L piece
+                    if self.remaining_ships["1x4"] > 0:
+                        if self.check_place_1x4_horizontal(row,col):
+                            new_action = (row, col, "1x4_horizontal", "hint", row, col)
+                            if new_action not in actions:
+                                actions.append(new_action)
+                            else:
+                                self.unfinished_hints.remove(row, col)
+                    if self.remaining_ships["1x3"] > 0:
+                        if self.check_place_1x3_horizontal(row,col):
+                            new_action = (row, col, "1x3_horizontal", "hint", row, col)
+                            if new_action not in actions:
+                                actions.append(new_action)
+                            else:
+                                self.unfinished_hints.remove(row, col)
+                    if self.remaining_ships["1x2"] > 0:
+                        if self.check_place_1x2_horizontal(row,col):
+                            new_action = (row, col, "1x2_horizontal", "hint", row, col)
+                            if new_action not in actions:
+                                actions.append(new_action)
+                            else:
+                                self.unfinished_hints.remove(row, col)
+                
+                elif self.board[row][col] == "B": # Try valid Ship placements around a B piece
+                    if self.remaining_ships["1x4"] > 0:
+                        if self.check_place_1x4_vertical(row - 3,col):
+                            new_action = (row - 3, col, "1x4_vertical", "hint", row, col)
+                            if new_action not in actions:
+                                actions.append(new_action)
+                            else:
+                                self.unfinished_hints.remove(row, col)
+                    if self.remaining_ships["1x3"] > 0:
+                        if self.check_place_1x3_vertical(row - 2,col):
+                            new_action = (row - 2, col, "1x3_vertical", "hint", row, col)
+                            if new_action not in actions:
+                                actions.append(new_action)
+                            else:
+                                self.unfinished_hints.remove(row, col)
+                    if self.remaining_ships["1x2"] > 0:
+                        if self.check_place_1x2_vertical(row - 1,col):
+                            new_action = (row - 1, col, "1x2_vertical", "hint", row, col)
+                            if new_action not in actions:
+                                actions.append(new_action)
+                            else:
+                                self.unfinished_hints.remove(row, col)
+                
+                elif self.board[row][col] == "R": # Try valid Ship placements around a R piece
+                    if self.remaining_ships["1x4"] > 0:
+                        if self.check_place_1x4_horizontal(row,col - 3):
+                            new_action = (row, col - 3, "1x4_horizontal", "hint", row, col)
+                            if new_action not in actions:
+                                actions.append(new_action)
+                            else:
+                                self.unfinished_hints.remove(row, col)
+                    if self.remaining_ships["1x3"] > 0:
+                        if self.check_place_1x3_horizontal(row,col - 2):
+                            new_action = (row, col - 2, "1x3_horizontal", "hint", row, col)
+                            if new_action not in actions:
+                                actions.append(new_action)
+                            else:
+                                self.unfinished_hints.remove(row, col)
+                    if self.remaining_ships["1x2"] > 0:
+                        if self.check_place_1x2_horizontal(row,col - 1):
+                            new_action = (row, col - 1, "1x2_horizontal", "hint", row, col)
+                            if new_action not in actions:
+                                actions.append(new_action)
+                            else:
+                                self.unfinished_hints.remove(row, col)
+                
+                elif self.board[row][col] == "M": # Try valid Ship placements around a M piece
+                    if self.remaining_ships["1x4"] > 0:
+                        if self.check_place_1x4_vertical(row - 1,col):
+                            new_action = (row - 1, col, "1x4_vertical", "hint", row, col)
+                            if new_action not in actions:
+                                actions.append(new_action)
+                            else:
+                                self.unfinished_hints.remove(row, col)
+                        if self.check_place_1x4_vertical(row - 2,col):
+                            new_action = (row - 2, col, "1x4_vertical", "hint", row, col)
+                            if new_action not in actions:
+                                actions.append(new_action)
+                            else:
+                                self.unfinished_hints.remove(row, col)
+                        
+                        if self.check_place_1x4_horizontal(row,col - 2):
+                            new_action = (row, col - 2, "1x4_horizontal", "hint", row, col)
+                            if new_action not in actions:
+                                actions.append(new_action)
+                            else:
+                                self.unfinished_hints.remove(row, col)
+                        if self.check_place_1x4_horizontal(row,col - 1):
+                            new_action = (row, col - 1, "1x4_horizontal", "hint", row, col)
+                            if new_action not in actions:
+                                actions.append(new_action)
+                            else:
+                                self.unfinished_hints.remove(row, col)
+                    if self.remaining_ships["1x3"] > 0:
+                        if self.check_place_1x3_vertical(row - 1,col):
+                            new_action = (row - 1, col, "1x3_vertical", "hint", row, col)
+                            if new_action not in actions:
+                                actions.append(new_action)
+                            else:
+                                self.unfinished_hints.remove(row, col)
+                        if self.check_place_1x3_horizontal(row,col - 1):
+                            new_action = (row, col - 1, "1x3_horizontal", "hint", row, col)
+                            if new_action not in actions:
+                                actions.append(new_action)
+                            else:
+                                self.unfinished_hints.remove(row, col)
         
         return actions
     
@@ -770,10 +770,11 @@ class Bimaru(Problem):
         print("CHOSEN STATE ID:", state.id)
         count = np.count_nonzero(state.board.board == "")
         print("Empty cells heuristic:", count)
+        print(state.board.board)
         print("\n\n")
         """
         # First Fill all Hints
-        if state.board.unfinished_hints > 0:
+        if len(state.board.unfinished_hints) > 0:
             actions = state.board.hint_actions()
             return actions
         
@@ -786,28 +787,28 @@ class Bimaru(Problem):
                     if state.board.remaining_ships["1x4"] > 0:
                         # try to plae a 1x4 ship vertivaly (topmost square on current cell)
                         if state.board.check_place_1x4_vertical(row,col):
-                            actions.append((row, col, "1x4_vertical", "empty"))
+                            actions.append((row, col, "1x4_vertical", "empty", 1, 1)) # 1, 1 are just place holders, those slots are only ussed for hints to know where the original hint was
                         # try to plae a 1x4 ship horizontaly (leftmost square on current cell)
                         if state.board.check_place_1x4_horizontal(row,col):
-                            actions.append((row, col, "1x4_horizontal", "empty"))
+                            actions.append((row, col, "1x4_horizontal", "empty", 1, 1))
                     elif  state.board.remaining_ships["1x3"] > 0:
                         # try to plae a 1x3 ship vertivaly (topmost square on current cell)
                         if state.board.check_place_1x3_vertical(row,col):
-                            actions.append((row, col, "1x3_vertical", "empty"))
+                            actions.append((row, col, "1x3_vertical", "empty", 1, 1))
                         # try to plae a 1x3 ship horizontaly (leftmost square on current cell)
                         if state.board.check_place_1x3_horizontal(row,col):
-                            actions.append((row, col, "1x3_horizontal", "empty"))
+                            actions.append((row, col, "1x3_horizontal", "empty", 1, 1))
                     elif  state.board.remaining_ships["1x2"] > 0:
                         # try to plae a 1x2 ship vertivaly (topmost square on current cell)
                         if state.board.check_place_1x2_vertical(row,col):
-                            actions.append((row, col, "1x2_vertical", "empty"))
+                            actions.append((row, col, "1x2_vertical", "empty", 1, 1))
                         # try to plae a 1x2 ship horizontaly (leftmost square on current cell)
                         if state.board.check_place_1x2_horizontal(row,col):
-                            actions.append((row, col, "1x2_horizontal", "empty"))
+                            actions.append((row, col, "1x2_horizontal", "empty", 1, 1))
                     elif  state.board.remaining_ships["1x1"] > 0:
                         # try to plae a 1x1 ship (on current cell)
                         if state.board.check_place_1x1(row,col):
-                            actions.append((row, col, "1x1", "empty"))
+                            actions.append((row, col, "1x1", "empty", 1, 1))
         return actions 
 
 
@@ -816,11 +817,11 @@ class Bimaru(Problem):
         'state' passado como argumento. A ação a executar deve ser uma
         das presentes na lista obtida pela execução de
         self.actions(state)."""
-        row, col, ship, type = action
+        row, col, ship, type, row_hint, col_hint = action
         new_board = copy.deepcopy(state.board)
         new_state = BimaruState(new_board)
         if type == "hint":
-            new_state.board.unfinished_hints -= 1
+            new_state.board.unfinished_hints.remove((row_hint, col_hint))
         new_state.board.insert_ship(row, col, ship)
         """
         # TODO: DEBUG
@@ -830,6 +831,7 @@ class Bimaru(Problem):
         print("Remaining Pieces:", new_state.board.get_remaining_pieces())
         print("Remaining Ships:", new_state.board.remaining_ships)
         print(new_state.board.board)
+        print(action)
         print("\n\n")
         """
         return new_state
