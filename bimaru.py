@@ -76,7 +76,7 @@ class Board:
         return np.count_nonzero((column == "T") | (column == "B") | (column == "L") | (column == "R") | (column == "C") | (column == "M"))
 
     @staticmethod
-    def parse_instance():
+    def parse_instance(self):
         """Lê o test do standard input (stdin) que é passado como argumento
         e retorna uma instância da classe Board.
         """
@@ -105,12 +105,33 @@ class Board:
                     if letter == "C":
                         remaining_pieces["C"] -= 1
                         remaining_ships["1x1"] -= 1
+                        self.insert_water_ontop_below(row, col)
+                        self.insert_water_right_left(row, col)
+                        self.insert_water_diagonals(row, col)
                     elif letter == "M":
                         unfinished_hints.append((row, col))
                         remaining_pieces["M"] -= 1
+                        self.insert_water_diagonals(row, col)
                     elif letter in ["T", "B", "R", "L"]:
                         unfinished_hints.append((row, col))
                         remaining_pieces["TBRL"] -= 1
+                        if letter == "T":
+                            self.insert_water_right_left(row, col)
+                            self.insert_water_ontop(row, col)
+                            self.insert_water_diagonals(row, col)
+                        elif letter == "B":
+                            self.insert_water_right_left(row, col)
+                            self.insert_water_below(row, col)
+                            self.insert_water_diagonals(row, col)
+                        elif letter == "R":
+                            self.insert_water_ontop_below(row, col)
+                            self.insert_water_right(row, col)
+                            self.insert_water_diagonals(row, col)
+                        elif letter == "L":
+                            self.insert_water_ontop_below(row, col)
+                            self.insert_water_left(row, col)
+                            self.insert_water_diagonals(row, col)
+
                 
                 hint_counter -= 1
                 if hint_counter == 0:
@@ -576,6 +597,33 @@ class Board:
         """inserts water on top of the given position"""
         if 0 <= row - 1 <= 9:
             self.board[row - 1][col] = "W"
+    
+    def insert_water_diagonals (self, row: int, col: int):
+        """inserts water diagonally around the given position"""
+        self.insert_water_top_left_diagonal(row, col)
+        self.insert_water_top_right_diagonal(row, col)
+        self.insert_water_below_left_diagonal(row, col)
+        self.insert_water_below_right_diagonal(row, col)
+
+    def insert_water_top_right_diagonal (self, row: int, col: int):
+        """Inserts water on top and to the right of the given position"""
+        if 0 <= row - 1 <= 9 and 0 <= col + 1 <= 9:
+            self.board[row - 1][col + 1] = "W"
+    
+    def insert_water_top_left_diagonal (self, row: int, col: int):
+        """Inserts water on top and to the left of the given position"""
+        if 0 <= row - 1 <= 9 and 0 <= col - 1 <= 9:
+            self.board[row - 1][col - 1] = "W"
+
+    def insert_water_below_right_diagonal (self, row: int, col: int):
+        """Inserts water below and to the right of the given position"""
+        if 0 <= row + 1 <= 9 and 0 <= col + 1 <= 9:
+            self.board[row + 1][col + 1] = "W"
+        
+    def insert_water_below_left_diagonal (self, row: int, col: int):
+        """Inserts water below and to the left of the given position"""
+        if 0 <= row + 1 <= 9 and 0 <= col - 1 <= 9:
+            self.board[row + 1][col - 1] = "W"
 
     def insert_water_ontop_below(self, row: int, col: int):
         """Inserts water on top and below the given position"""
@@ -764,7 +812,6 @@ class Bimaru(Problem):
         partir do estado passado como argumento."""
         
         actions = []
-        """
         # TODO: Debug
         print("\n\n")
         print("CHOSEN STATE ID:", state.id)
@@ -772,7 +819,7 @@ class Bimaru(Problem):
         print("Empty cells heuristic:", count)
         print(state.board.board)
         print("\n\n")
-        """
+
         # First Fill all Hints
         if len(state.board.unfinished_hints) > 0:
             actions = state.board.hint_actions()
@@ -823,7 +870,7 @@ class Bimaru(Problem):
         if type == "hint":
             new_state.board.unfinished_hints.remove((row_hint, col_hint))
         new_state.board.insert_ship(row, col, ship)
-        """
+        
         # TODO: DEBUG
         print("State ID:", new_state.id)
         count = np.count_nonzero(new_state.board.board == "")
@@ -833,7 +880,7 @@ class Bimaru(Problem):
         print(new_state.board.board)
         print(action)
         print("\n\n")
-        """
+
         return new_state
 
 
@@ -851,7 +898,7 @@ class Bimaru(Problem):
 
 if __name__ == "__main__":
     # Ler o ficheiro do standard input,
-    board, remaining_pieces, row_hints, col_hints, unfinished_hints, remaining_ships = Board.parse_instance()
+    board, remaining_pieces, row_hints, col_hints, unfinished_hints, remaining_ships = Board.parse_instance(self=Board)
     initial_board = copy.deepcopy(board)
     # Criar uma instância do problema Bimaru,
     problem = Bimaru(board, remaining_pieces, row_hints, col_hints, unfinished_hints, remaining_ships)
