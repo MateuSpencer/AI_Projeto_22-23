@@ -229,7 +229,7 @@ class Board:
         if self.remaining_ships["1x2"] == 0:
             return False
         
-        if row + 1 > 9:
+        if row < 0 or row + 1 > 9:
             return False # cannot exceed board limits
         
         # Check if number of pieces in the column will exceed limit
@@ -253,7 +253,7 @@ class Board:
         if self.remaining_ships["1x2"] == 0:
             return False
         
-        if col + 1 > 9:
+        if col < 0 or col + 1 > 9:
             return False # cannot exceed board limits
         
         # Check if number of pieces in the row will exceed limit
@@ -277,7 +277,7 @@ class Board:
         if self.remaining_ships["1x3"] == 0:
             return False
         
-        if row + 2 > 9:
+        if row < 0 or row + 2 > 9:
             return False # cannot exceed board limits
         
         # Check if number of pieces in the column will exceed limit
@@ -305,7 +305,7 @@ class Board:
         if self.remaining_ships["1x3"] == 0:
             return False
         
-        if col + 2 > 9:
+        if col < 0 or col + 2 > 9:
             return False # cannot exceed board limits
         
         
@@ -334,7 +334,7 @@ class Board:
         if self.remaining_ships["1x4"] == 0:
             return False
         
-        if row + 3 > 9:
+        if row < 0 or row + 3 > 9:
             return False # cannot exceed board limits
         
         # Check if number of pieces in the column will exceed limit
@@ -376,7 +376,7 @@ class Board:
         if self.remaining_ships["1x4"] == 0:
             return False
         
-        if col + 3 > 9:
+        if col < 0 or  col + 3 > 9:
             return False # cannot exceed board limits
         
         # Check if number of pieces in the row will exceed limit
