@@ -74,9 +74,38 @@ class Board:
         """Return the number of pieces placed in a column."""
         column = self.board[:, col_index]
         return np.count_nonzero((column == "T") | (column == "B") | (column == "L") | (column == "R") | (column == "C") | (column == "M"))
+    
+    def fill_water_around_hints(self):
+        for i in range(10):
+            row = i
+            for j in range(10):
+                col = j
+                if board[i][j] == "C":
+                    self.insert_water_ontop_below(row, col)
+                    self.insert_water_right_left(row, col)
+                    self.insert_water_diagonals(row, col)
+                elif board[i][j] == "M":
+                    self.insert_water_diagonals(row, col)
+                elif board[i][j] in ["T", "B", "R", "L"]:
+                    if board[i][j] == "T":
+                        self.insert_water_right_left(row, col)
+                        self.insert_water_ontop(row, col)
+                        self.insert_water_diagonals(row, col)
+                    elif board[i][j] == "B":
+                        self.insert_water_right_left(row, col)
+                        self.insert_water_below(row, col)
+                        self.insert_water_diagonals(row, col)
+                    elif board[i][j] == "R":
+                        self.insert_water_ontop_below(row, col)
+                        self.insert_water_right(row, col)
+                        self.insert_water_diagonals(row, col)
+                    elif board[i][j] == "L":
+                        self.insert_water_ontop_below(row, col)
+                        self.insert_water_left(row, col)
+                        self.insert_water_diagonals(row, col)
 
     @staticmethod
-    def parse_instance(self):
+    def parse_instance():
         """Lê o test do standard input (stdin) que é passado como argumento
         e retorna uma instância da classe Board.
         """
@@ -98,41 +127,19 @@ class Board:
             elif parts[0] == 'COLUMN':
                 col_hints = [int(x) for x in parts[1:]]
             elif parts[0] == 'HINT':
-                
                 row, col, letter = int(parts[1]), int(parts[2]), parts[3]
                 board[row][col] = letter
                 if letter != "W":
                     if letter == "C":
                         remaining_pieces["C"] -= 1
                         remaining_ships["1x1"] -= 1
-                        self.insert_water_ontop_below(row, col)
-                        self.insert_water_right_left(row, col)
-                        self.insert_water_diagonals(row, col)
                     elif letter == "M":
                         unfinished_hints.append((row, col))
                         remaining_pieces["M"] -= 1
-                        self.insert_water_diagonals(row, col)
                     elif letter in ["T", "B", "R", "L"]:
                         unfinished_hints.append((row, col))
                         remaining_pieces["TBRL"] -= 1
-                        if letter == "T":
-                            self.insert_water_right_left(row, col)
-                            self.insert_water_ontop(row, col)
-                            self.insert_water_diagonals(row, col)
-                        elif letter == "B":
-                            self.insert_water_right_left(row, col)
-                            self.insert_water_below(row, col)
-                            self.insert_water_diagonals(row, col)
-                        elif letter == "R":
-                            self.insert_water_ontop_below(row, col)
-                            self.insert_water_right(row, col)
-                            self.insert_water_diagonals(row, col)
-                        elif letter == "L":
-                            self.insert_water_ontop_below(row, col)
-                            self.insert_water_left(row, col)
-                            self.insert_water_diagonals(row, col)
 
-                
                 hint_counter -= 1
                 if hint_counter == 0:
                     break
@@ -239,7 +246,7 @@ class Board:
     def check_place_1x1 (self, row: int, col: int):
         if self.remaining_ships["1x1"] == 0:
             return False
-        if ((self.row_pieces_placed(row) + 1) > self.bimaru.row_hints[row]):
+        if ((self.row_pieces_placed(row) + 1) > self.bimaru.row_hints[row]): # adding a C will also add water to the sorouding cells
             return False # if adding 1 piece to this row  exceeds the hint value, invalid placement
         if ((self.col_pieces_placed(col) + 1) > self.bimaru.col_hints[col]):
             return False # if adding 1 piece to this column exceeds the hint value, invalid placement
@@ -653,6 +660,7 @@ class Board:
             self.board[row][col] = "C"
             self.insert_water_ontop_below(row, col)
             self.insert_water_right_left(row, col)
+            self.insert_water_diagonals(row, col)
             # decrease count of center pieces
             self.remaining_ships["1x1"] -= 1
             self.remaining_pieces["C"] -= 1
@@ -664,12 +672,14 @@ class Board:
             self.board[row][col] = "T"
             self.insert_water_right_left(row, col)
             self.insert_water_ontop(row, col)
+            self.insert_water_diagonals(row, col)
             # place Bottom piece & Water around it
             if self.board[row + 1][col] == "B":
                 self.remaining_pieces["TBRL"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row + 1][col] = "B"
             self.insert_water_right_left(row + 1, col)
             self.insert_water_below(row + 1, col)
+            self.insert_water_diagonals(row, col)
             # decrease count of edge pieces
             self.remaining_ships["1x2"] -= 1
             self.remaining_pieces["TBRL"] -= 2
@@ -682,12 +692,14 @@ class Board:
             self.board[row][col] = "L"
             self.insert_water_ontop_below(row, col)
             self.insert_water_left(row, col)
+            self.insert_water_diagonals(row, col)
             # place Right piece & Water around it
             if self.board[row][col + 1] == "R":
                 self.remaining_pieces["TBRL"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row][col + 1] = "R"
             self.insert_water_ontop_below(row, col + 1)
             self.insert_water_right(row, col + 1)
+            self.insert_water_diagonals(row, col)
             # decrease count of edge pieces
             self.remaining_ships["1x2"] -= 1
             self.remaining_pieces["TBRL"] -= 2
@@ -699,17 +711,20 @@ class Board:
             self.board[row][col] = "T"
             self.insert_water_right_left(row, col)
             self.insert_water_ontop(row, col)
+            self.insert_water_diagonals(row, col)
             # place Middle piece & Water around it
             if self.board[row + 1][col] == "M":
                 self.remaining_pieces["M"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row + 1][col] = "M"
             self.insert_water_right_left(row + 1, col)
+            self.insert_water_diagonals(row, col)
             # place Bottom piece & Water around it
             if self.board[row + 2][col] == "B":
                 self.remaining_pieces["TBRL"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row + 2][col] = "B"
             self.insert_water_right_left(row + 2, col)
             self.insert_water_below(row + 2, col)
+            self.insert_water_diagonals(row, col)
             # decrease count of edge & middle pieces
             self.remaining_ships["1x3"] -= 1
             self.remaining_pieces["TBRL"] -= 2
@@ -722,17 +737,20 @@ class Board:
             self.board[row][col] = "L"
             self.insert_water_ontop_below(row, col)
             self.insert_water_left(row, col)
+            self.insert_water_diagonals(row, col)
             # place Middle piece & Water around it
             if self.board[row][col + 1] == "M":
                 self.remaining_pieces["M"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row][col + 1] = "M"
             self.insert_water_ontop_below(row, col + 1)
+            self.insert_water_diagonals(row, col)
             # place Right piece & Water around it
             if self.board[row][col + 2] == "R":
                 self.remaining_pieces["TBRL"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row][col + 2] = "R"
             self.insert_water_ontop_below(row, col + 2)
             self.insert_water_right(row, col + 2)
+            self.insert_water_diagonals(row, col)
             # decrease count of edge & middle pieces
             self.remaining_ships["1x3"] -= 1
             self.remaining_pieces["TBRL"] -= 2
@@ -745,22 +763,26 @@ class Board:
             self.board[row][col] = "T"
             self.insert_water_right_left(row, col)
             self.insert_water_ontop(row, col)
+            self.insert_water_diagonals(row, col)
             # place Middle piece & Water around it
             if self.board[row + 1][col] == "M":
                 self.remaining_pieces["M"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row + 1][col] = "M"
             self.insert_water_right_left(row + 1, col)
+            self.insert_water_diagonals(row, col)
             # place Middle piece & Water around it
             if self.board[row + 2][col] == "M":
                 self.remaining_pieces["M"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row + 2][col] = "M"
             self.insert_water_right_left(row + 2, col)
+            self.insert_water_diagonals(row, col)
             # place Bottom piece & Water around it
             if self.board[row + 3][col] == "B":
                 self.remaining_pieces["TBRL"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row + 3][col] = "B"
             self.insert_water_right_left(row + 3, col)
             self.insert_water_below(row + 3, col)
+            self.insert_water_diagonals(row, col)
             # decrease count of edge & middle pieces
             self.remaining_ships["1x4"] -= 1
             self.remaining_pieces["TBRL"] -= 2
@@ -773,22 +795,26 @@ class Board:
             self.board[row][col] = "L"
             self.insert_water_ontop_below(row, col)
             self.insert_water_left(row, col)
+            self.insert_water_diagonals(row, col)
             # place Middle piece & Water around it
             if self.board[row][col + 1] == "M":
                 self.remaining_pieces["M"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row][col + 1] = "M"
             self.insert_water_ontop_below(row, col + 1)
+            self.insert_water_diagonals(row, col)
             # place Middle piece & Water around it
             if self.board[row][col + 2] == "M":
                 self.remaining_pieces["M"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row][col + 2] = "M"
             self.insert_water_ontop_below(row, col + 2)
+            self.insert_water_diagonals(row, col)
             #place Right piece & Water around it
             if self.board[row][col + 3] == "R":
                 self.remaining_pieces["TBRL"] += 1 # if piece is already placed, (it is a hint acho) increase count of edge pieces, to offset the one that will be removed later
             self.board[row][col + 3] = "R"
             self.insert_water_ontop_below(row, col + 3)
             self.insert_water_right(row, col + 3)
+            self.insert_water_diagonals(row, col)
             # decrease count of edge & middle pieces
             self.remaining_ships["1x4"] -= 1
             self.remaining_pieces["TBRL"] -= 2
@@ -804,6 +830,7 @@ class Bimaru(Problem):
         self.row_hints = row_hints 
         self.col_hints = col_hints
         board_object = Board(board, remaining_pieces, unfinished_hints, remaining_ships, self) #Criar o Board inicial, passando o problema Bimaru para poder aceder às hints
+        board_object.fill_water_around_hints() # Fill water around hints
         self.state = BimaruState(board_object)
         super().__init__(self.state)
 
@@ -897,11 +924,11 @@ class Bimaru(Problem):
 
 
 if __name__ == "__main__":
-    # Ler o ficheiro do standard input,
-    board, remaining_pieces, row_hints, col_hints, unfinished_hints, remaining_ships = Board.parse_instance(self=Board)
-    initial_board = copy.deepcopy(board)
+    # Ler o ficheiro do standard input, 
+    board, remaining_pieces, row_hints, col_hints, unfinished_hints, remaining_ships = Board.parse_instance()
+    first_board = copy.deepcopy(board)
     # Criar uma instância do problema Bimaru,
-    problem = Bimaru(board, remaining_pieces, row_hints, col_hints, unfinished_hints, remaining_ships)
+    problem = Bimaru(copy.deepcopy(board), remaining_pieces, row_hints, col_hints, unfinished_hints, remaining_ships)
     # Usar uma técnica de procura para resolver a instância,
     # Retirar a solução a partir do nó resultante,
     goal_node = astar_search(problem)
@@ -910,10 +937,10 @@ if __name__ == "__main__":
         solved_board = np.where(goal_node.state.board.board  == 'W', '.', goal_node.state.board.board)
         for i in range(10):
             for j in range(10):
-                if solved_board[i][j] != '.' and initial_board[i][j] == '':
+                if solved_board[i][j] != '.' and first_board[i][j] == '':
                     solved_board[i][j] = solved_board[i][j].lower()
-                elif initial_board[i][j] != '':
-                    solved_board[i][j] = initial_board[i][j]
+                elif first_board[i][j] != '':
+                    solved_board[i][j] = first_board[i][j]
                 print(solved_board[i][j], end='')
             print(end='\n')
     else:
