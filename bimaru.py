@@ -442,9 +442,16 @@ class Board:
         
         return self.check_place_L(row,col) and self.check_place_M_horizontal(row, col + 1) and self.check_place_M_horizontal(row, col + 2) and self.check_place_R(row, col + 3)
 
-
+    """Used to check if an action is already in the list, ignoring the last 2 fields"""
+    def tuple_doesnt_exist(self, list, new_tuple):
+        for tuple in list:
+            if tuple[:4] == new_tuple[:4]:
+                return False #Exists already
+        return True
+    
     def hint_actions (self):
         actions = []
+        hints_to_remove = []
         
         for hint in self.unfinished_hints:
             row, col = hint
@@ -453,135 +460,137 @@ class Board:
                     if self.remaining_ships["1x4"] > 0:
                         if self.check_place_1x4_vertical(row,col):
                             new_action = (row, col, "1x4_vertical", "hint", row, col)
-                            if new_action not in actions:
+                            if self.tuple_doesnt_exist(actions, new_action):
                                 actions.append(new_action)
                             else:
-                                self.unfinished_hints.remove(row, col)
+                                hints_to_remove.append((row, col))
                     if self.remaining_ships["1x3"] > 0:
                         if self.check_place_1x3_vertical(row,col):
                             new_action = (row, col, "1x3_vertical", "hint", row, col)
-                            if new_action not in actions:
+                            if self.tuple_doesnt_exist(actions, new_action):
                                 actions.append(new_action)
                             else:
-                                self.unfinished_hints.remove(row, col)
+                                hints_to_remove.append((row, col))
                     if self.remaining_ships["1x2"] > 0:
                         if self.check_place_1x2_vertical(row,col):
                             new_action = (row, col, "1x2_vertical", "hint", row, col)
-                            if new_action not in actions:
+                            if self.tuple_doesnt_exist(actions, new_action):
                                 actions.append(new_action)
                             else:
-                                self.unfinished_hints.remove(row, col)
+                                hints_to_remove.append((row, col))
                 
                 elif self.board[row][col] == "L": # Try valid Ship placements around an L piece
                     if self.remaining_ships["1x4"] > 0:
                         if self.check_place_1x4_horizontal(row,col):
                             new_action = (row, col, "1x4_horizontal", "hint", row, col)
-                            if new_action not in actions:
+                            if self.tuple_doesnt_exist(actions, new_action):
                                 actions.append(new_action)
                             else:
-                                self.unfinished_hints.remove(row, col)
+                                hints_to_remove.append((row, col))
                     if self.remaining_ships["1x3"] > 0:
                         if self.check_place_1x3_horizontal(row,col):
                             new_action = (row, col, "1x3_horizontal", "hint", row, col)
-                            if new_action not in actions:
+                            if self.tuple_doesnt_exist(actions, new_action):
                                 actions.append(new_action)
                             else:
-                                self.unfinished_hints.remove(row, col)
+                                hints_to_remove.append((row, col))
                     if self.remaining_ships["1x2"] > 0:
                         if self.check_place_1x2_horizontal(row,col):
                             new_action = (row, col, "1x2_horizontal", "hint", row, col)
-                            if new_action not in actions:
+                            if self.tuple_doesnt_exist(actions, new_action):
                                 actions.append(new_action)
                             else:
-                                self.unfinished_hints.remove(row, col)
+                                hints_to_remove.append((row, col))
                 
                 elif self.board[row][col] == "B": # Try valid Ship placements around a B piece
                     if self.remaining_ships["1x4"] > 0:
                         if self.check_place_1x4_vertical(row - 3,col):
                             new_action = (row - 3, col, "1x4_vertical", "hint", row, col)
-                            if new_action not in actions:
+                            if self.tuple_doesnt_exist(actions, new_action):
                                 actions.append(new_action)
                             else:
-                                self.unfinished_hints.remove(row, col)
+                                hints_to_remove.append((row, col))
                     if self.remaining_ships["1x3"] > 0:
                         if self.check_place_1x3_vertical(row - 2,col):
                             new_action = (row - 2, col, "1x3_vertical", "hint", row, col)
-                            if new_action not in actions:
+                            if self.tuple_doesnt_exist(actions, new_action):
                                 actions.append(new_action)
                             else:
-                                self.unfinished_hints.remove(row, col)
+                                hints_to_remove.append((row, col))
                     if self.remaining_ships["1x2"] > 0:
                         if self.check_place_1x2_vertical(row - 1,col):
                             new_action = (row - 1, col, "1x2_vertical", "hint", row, col)
-                            if new_action not in actions:
+                            if self.tuple_doesnt_exist(actions, new_action):
                                 actions.append(new_action)
                             else:
-                                self.unfinished_hints.remove(row, col)
+                                hints_to_remove.append((row, col))
                 
                 elif self.board[row][col] == "R": # Try valid Ship placements around a R piece
                     if self.remaining_ships["1x4"] > 0:
                         if self.check_place_1x4_horizontal(row,col - 3):
                             new_action = (row, col - 3, "1x4_horizontal", "hint", row, col)
-                            if new_action not in actions:
+                            if self.tuple_doesnt_exist(actions, new_action):
                                 actions.append(new_action)
                             else:
-                                self.unfinished_hints.remove(row, col)
+                                hints_to_remove.append((row, col))
                     if self.remaining_ships["1x3"] > 0:
                         if self.check_place_1x3_horizontal(row,col - 2):
                             new_action = (row, col - 2, "1x3_horizontal", "hint", row, col)
-                            if new_action not in actions:
+                            if self.tuple_doesnt_exist(actions, new_action):
                                 actions.append(new_action)
                             else:
-                                self.unfinished_hints.remove(row, col)
+                                hints_to_remove.append((row, col))
                     if self.remaining_ships["1x2"] > 0:
                         if self.check_place_1x2_horizontal(row,col - 1):
                             new_action = (row, col - 1, "1x2_horizontal", "hint", row, col)
-                            if new_action not in actions:
+                            if self.tuple_doesnt_exist(actions, new_action):
                                 actions.append(new_action)
                             else:
-                                self.unfinished_hints.remove(row, col)
+                                hints_to_remove.append((row, col))
                 
                 elif self.board[row][col] == "M": # Try valid Ship placements around a M piece
                     if self.remaining_ships["1x4"] > 0:
                         if self.check_place_1x4_vertical(row - 1,col):
                             new_action = (row - 1, col, "1x4_vertical", "hint", row, col)
-                            if new_action not in actions:
+                            if self.tuple_doesnt_exist(actions, new_action):
                                 actions.append(new_action)
                             else:
-                                self.unfinished_hints.remove(row, col)
+                                hints_to_remove.append((row, col))
                         if self.check_place_1x4_vertical(row - 2,col):
                             new_action = (row - 2, col, "1x4_vertical", "hint", row, col)
-                            if new_action not in actions:
+                            if self.tuple_doesnt_exist(actions, new_action):
                                 actions.append(new_action)
                             else:
-                                self.unfinished_hints.remove(row, col)
+                                hints_to_remove.append((row, col))
                         
                         if self.check_place_1x4_horizontal(row,col - 2):
                             new_action = (row, col - 2, "1x4_horizontal", "hint", row, col)
-                            if new_action not in actions:
+                            if self.tuple_doesnt_exist(actions, new_action):
                                 actions.append(new_action)
                             else:
-                                self.unfinished_hints.remove(row, col)
+                                hints_to_remove.append((row, col))
                         if self.check_place_1x4_horizontal(row,col - 1):
                             new_action = (row, col - 1, "1x4_horizontal", "hint", row, col)
-                            if new_action not in actions:
+                            if self.tuple_doesnt_exist(actions, new_action):
                                 actions.append(new_action)
                             else:
-                                self.unfinished_hints.remove(row, col)
+                                hints_to_remove.append((row, col))
                     if self.remaining_ships["1x3"] > 0:
                         if self.check_place_1x3_vertical(row - 1,col):
                             new_action = (row - 1, col, "1x3_vertical", "hint", row, col)
-                            if new_action not in actions:
+                            if self.tuple_doesnt_exist(actions, new_action):
                                 actions.append(new_action)
                             else:
-                                self.unfinished_hints.remove(row, col)
+                                hints_to_remove.append((row, col))
                         if self.check_place_1x3_horizontal(row,col - 1):
                             new_action = (row, col - 1, "1x3_horizontal", "hint", row, col)
-                            if new_action not in actions:
+                            if self.tuple_doesnt_exist(actions, new_action):
                                 actions.append(new_action)
                             else:
-                                self.unfinished_hints.remove(row, col)
-        
+                                hints_to_remove.append((row, col))
+                    
+        for hint in hints_to_remove:
+            self.unfinished_hints.remove(hint)
         return actions
     
 
@@ -840,12 +849,12 @@ class Bimaru(Problem):
         
         actions = []
         # TODO: Debug
-        print("\n\n")
-        print("CHOSEN STATE ID:", state.id)
-        count = np.count_nonzero(state.board.board == "")
-        print("Empty cells heuristic:", count)
-        print(state.board.board)
-        print("\n\n")
+        #print("\n\n")
+        #print("CHOSEN STATE ID:", state.id)
+        #count = np.count_nonzero(state.board.board == "") +  state.board.get_remaining_pieces()
+        #print("Empty cells heuristic:", count)
+        #print(state.board.board)
+        #print("\n\n")
 
         # First Fill all Hints
         if len(state.board.unfinished_hints) > 0:
@@ -899,14 +908,14 @@ class Bimaru(Problem):
         new_state.board.insert_ship(row, col, ship)
         
         # TODO: DEBUG
-        print("State ID:", new_state.id)
-        count = np.count_nonzero(new_state.board.board == "")
-        print("Empty cells heuristic:", count)
-        print("Remaining Pieces:", new_state.board.get_remaining_pieces())
-        print("Remaining Ships:", new_state.board.remaining_ships)
-        print(new_state.board.board)
-        print(action)
-        print("\n\n")
+        #print("State ID:", new_state.id)
+        #count = np.count_nonzero(new_state.board.board == "") + state.board.get_remaining_pieces()
+        #print("Empty cells heuristic:", count)
+        #print("Remaining Pieces:", new_state.board.get_remaining_pieces())
+        #print("Remaining Ships:", new_state.board.remaining_ships)
+        #print(new_state.board.board)
+        #print(action)
+        #print("\n\n")
 
         return new_state
 
@@ -920,7 +929,7 @@ class Bimaru(Problem):
 
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
-        return np.count_nonzero(node.state.board.board == "")  #TODO: Would be faster if it kept a count
+        return (np.count_nonzero(node.state.board.board == "") + node.state.board.get_remaining_pieces())  #TODO: Would be faster if it kept a count
 
 
 if __name__ == "__main__":
