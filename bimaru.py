@@ -64,6 +64,30 @@ class Board:
         left = self.get_value(row, col-1) if col > 0 else ""
         right = self.get_value(row, col+1) if col < 9 else ""
         return left, right
+    
+    def adjacent_diagonal_values(self, row: int, col: int) -> Tuple[str, str, str, str]:
+        """Devolve os valores imediatamente acima, abaixo, à esquerda e à direita, respectivamente."""
+        if(row > 0 and col > 0):
+            above_left = self.get_value(row-1, col-1) 
+        else:
+            above_left = ""
+        
+        if(row > 0 and col < 9):
+            above_right = self.get_value(row-1, col+1)
+        else:
+            above_right = ""
+        
+        if(row < 9 and col > 0):
+            below_left = self.get_value(row+1, col-1)
+        else:
+            below_left = ""
+        
+        if(row < 9 and col < 9):
+            below_right = self.get_value(row+1, col+1)
+        else:
+            below_right = ""
+
+        return above_left, above_right, below_left, below_right
         
     def row_pieces_placed (self, row_index: int) -> int:
         """Devolve o número de peças colocadas numa linha."""
@@ -164,6 +188,10 @@ class Board:
         left, right = self.adjacent_horizontal_values(row, col)
         if left not in ["", "W"] or right not in ["", "W"]:
             return False
+        above_left, above_right, below_left, below_right = self.adjacent_diagonal_values(row, col)
+        if above_left not in ["", "W"] or above_right not in ["", "W"] or below_left not in ["", "W"] or below_right not in ["", "W"]:
+            return False
+        
         return True
 
     # A peça M vertical só pode ter peças W ou empty de lado ou Top/M Encima e Bottom/M Embaixo
@@ -176,6 +204,10 @@ class Board:
         left, right = self.adjacent_horizontal_values(row, col)
         if left not in ["", "W"] or right not in ["", "W"]:
             return False
+        above_left, above_right, below_left, below_right = self.adjacent_diagonal_values(row, col)
+        if above_left not in ["", "W"] or above_right not in ["", "W"] or below_left not in ["", "W"] or below_right not in ["", "W"]:
+            return False
+        
         return True
     
     # A peça M horizontal só pode ter peças W ou empty encima ou Left/M Esquerda e Right/M Direita
@@ -188,6 +220,10 @@ class Board:
         left, right = self.adjacent_horizontal_values(row, col)
         if left not in ["L", "M", ""] or right not in ["R", "M", ""]:
             return False
+        above_left, above_right, below_left, below_right = self.adjacent_diagonal_values(row, col)
+        if above_left not in ["", "W"] or above_right not in ["", "W"] or below_left not in ["", "W"] or below_right not in ["", "W"]:
+            return False
+        
         return True
 
     # a peça T so pode ter encima e nos lados ou 0 ou W e em baixo pode ter ou M ou B ou 0
@@ -200,6 +236,10 @@ class Board:
         left, right = self.adjacent_horizontal_values(row, col)
         if left not in ["", "W"] or right not in ["", "W"]:
             return False
+        above_left, above_right, below_left, below_right = self.adjacent_diagonal_values(row, col)
+        if above_left not in ["", "W"] or above_right not in ["", "W"] or below_left not in ["", "W"] or below_right not in ["", "W"]:
+            return False
+        
         return True
     # a peça B so pode ter em baixo e nos lados ou 0 ou W e encima pode ter ou M ou T ou 0
     def check_place_B (self, row: int, col: int):
@@ -211,6 +251,10 @@ class Board:
         left, right = self.adjacent_horizontal_values(row, col)
         if left not in ["", "W"] or right not in ["", "W"]:
             return False
+        above_left, above_right, below_left, below_right = self.adjacent_diagonal_values(row, col)
+        if above_left not in ["", "W"] or above_right not in ["", "W"] or below_left not in ["", "W"] or below_right not in ["", "W"]:
+            return False
+        
         return True
 
     # a peça R so pode ter à direita ou encima ou em baixo 0 ou W e à esquerda so pode ter M, L ou 0
@@ -223,6 +267,10 @@ class Board:
         left, right = self.adjacent_horizontal_values(row, col)
         if left not in ["", "M", "L"] or right not in ["", "W"]:
             return False
+        above_left, above_right, below_left, below_right = self.adjacent_diagonal_values(row, col)
+        if above_left not in ["", "W"] or above_right not in ["", "W"] or below_left not in ["", "W"] or below_right not in ["", "W"]:
+            return False
+        
         return True
 
     # a peça L so pode ter à esquerda ou encima ou em baixo 0 ou W e à direita so pode ter M, R ou 0
@@ -235,6 +283,10 @@ class Board:
         left, right = self.adjacent_horizontal_values(row, col)
         if left not in ["", "W"] or right not in ["", "M", "R"]:
             return False
+        above_left, above_right, below_left, below_right = self.adjacent_diagonal_values(row, col)
+        if above_left not in ["", "W"] or above_right not in ["", "W"] or below_left not in ["", "W"] or below_right not in ["", "W"]:
+            return False
+        
         return True
 
     """
@@ -833,13 +885,14 @@ class Board:
 
 
 class Bimaru(Problem):
-    def __init__(self, board, remaining_pieces, row_hints, col_hints, unfinished_hints, remaining_ships):
+    def __init__(self, board, remaining_pieces, row_hints, col_hints, unfinished_hints, remaining_ships, empty_cells_values):
         """O construtor especifica o estado inicial."""
         # number of positions in the row / column with a ship cell
         self.row_hints = row_hints 
         self.col_hints = col_hints
         board_object = Board(board, remaining_pieces, unfinished_hints, remaining_ships, self) #Criar o Board inicial, passando o problema Bimaru para poder aceder às hints
         board_object.fill_water_around_hints() # Fill water around hints
+        self.empty_cells_values = empty_cells_values
         self.state = BimaruState(board_object)
         super().__init__(self.state)
 
@@ -849,12 +902,19 @@ class Bimaru(Problem):
         
         actions = []
         # TODO: Debug
-        #print("\n\n")
-        #print("CHOSEN STATE ID:", state.id)
-        #count = np.count_nonzero(state.board.board == "") +  state.board.get_remaining_pieces()
-        #print("Empty cells heuristic:", count)
-        #print(state.board.board)
-        #print("\n\n")
+        # print("\n\n")
+        # print("CHOSEN STATE ID:", state.id)
+        # count = np.count_nonzero(state.board.board == "")
+        # print("Empty cells heuristic:", count)
+        # print(state.board.board)
+        # print("\n\n")
+
+        # for empty_cell in self.empty_cells_values:
+        #     empty_cell_row = empty_cell[0]
+        #     empty_cell_col = empty_cell[1]
+        #     if(state.board.board[empty_cell_row][empty_cell_col] != ""):
+        #         self.empty_cells_values.remove(empty_cell)
+        # self.empty_cells_values.sort(key=lambda x: x[2])
 
         # First Fill all Hints
         if len(state.board.unfinished_hints) > 0:
@@ -864,6 +924,36 @@ class Bimaru(Problem):
         # After placing all hints, try to place ships on empty cells
             # Try to place a Ships (Horizontal and Vertical): 1x1, 1x2, 1x3, 1x4 (Centered on the topmost/left most piece)
                 # Start by placing first the bigger pieces and only then place the smaller ones
+        # for i in range(len(self.empty_cells_values)):
+        #     row = self.empty_cells_values[i][0]
+        #     col = self.empty_cells_values[i][1]
+        #     if sum(state.board.remaining_ships.values()) >= np.count_nonzero(state.board.board == ""): # if the number of pieces to place is larger than the number of empty cells, then place pieces 
+        #         if state.board.remaining_ships["1x4"] > 0:
+        #             # try to plae a 1x4 ship vertivaly (topmost square on current cell)
+        #             if state.board.check_place_1x4_vertical(row,col):
+        #                 actions.append((row, col, "1x4_vertical", "empty", 1, 1)) # 1, 1 are just place holders, those slots are only ussed for hints to know where the original hint was
+        #             # try to plae a 1x4 ship horizontaly (leftmost square on current cell)
+        #             if state.board.check_place_1x4_horizontal(row,col):
+        #                 actions.append((row, col, "1x4_horizontal", "empty", 1, 1))
+        #         elif  state.board.remaining_ships["1x3"] > 0:
+        #             # try to plae a 1x3 ship vertivaly (topmost square on current cell)
+        #             if state.board.check_place_1x3_vertical(row,col):
+        #                 actions.append((row, col, "1x3_vertical", "empty", 1, 1))
+        #             # try to plae a 1x3 ship horizontaly (leftmost square on current cell)
+        #             if state.board.check_place_1x3_horizontal(row,col):
+        #                 actions.append((row, col, "1x3_horizontal", "empty", 1, 1))
+        #         elif  state.board.remaining_ships["1x2"] > 0:
+        #             # try to plae a 1x2 ship vertivaly (topmost square on current cell)
+        #             if state.board.check_place_1x2_vertical(row,col):
+        #                 actions.append((row, col, "1x2_vertical", "empty", 1, 1))
+        #             # try to plae a 1x2 ship horizontaly (leftmost square on current cell)
+        #             if state.board.check_place_1x2_horizontal(row,col):
+        #                 actions.append((row, col, "1x2_horizontal", "empty", 1, 1))
+        #         elif  state.board.remaining_ships["1x1"] > 0:
+        #             # try to plae a 1x1 ship (on current cell)
+        #             if state.board.check_place_1x1(row,col):
+        #                 actions.append((row, col, "1x1", "empty", 1, 1))
+
         for row in range(10):
             for col in range(10):
                 if state.board.get_value(row, col) == "":
@@ -893,14 +983,15 @@ class Bimaru(Problem):
                         if state.board.check_place_1x1(row,col):
                             actions.append((row, col, "1x1", "empty", 1, 1))
         return actions 
-
-
+        
     def result(self, state: BimaruState, action):
         """Retorna o estado resultante de executar a 'action' sobre
         'state' passado como argumento. A ação a executar deve ser uma
         das presentes na lista obtida pela execução de
         self.actions(state)."""
         row, col, ship, type, row_hint, col_hint = action
+        # coordinates = self.determine_ship_coordinates(row, col, ship)
+        # self.update_empty_cells_values(coordinates)
         new_board = copy.deepcopy(state.board)
         new_state = BimaruState(new_board)
         if type == "hint":
@@ -918,6 +1009,49 @@ class Bimaru(Problem):
         #print("\n\n")
 
         return new_state
+    
+    def determine_ship_coordinates(self, row, col, ship):
+        coordinates = []
+        if ship == "1x4_vertical":
+            coordinates.append((row, col))
+            coordinates.append((row + 1, col))
+            coordinates.append((row + 2, col))
+            coordinates.append((row + 3, col))
+        elif ship == "1x4_horizontal":
+            coordinates.append((row, col))
+            coordinates.append((row, col + 1))
+            coordinates.append((row, col + 2))
+            coordinates.append((row, col + 3))
+        elif ship == "1x3_vertical":
+            coordinates.append((row, col))
+            coordinates.append((row + 1, col))
+            coordinates.append((row + 2, col))
+        elif ship == "1x3_horizontal":
+            coordinates.append((row, col))
+            coordinates.append((row, col + 1))
+            coordinates.append((row, col + 2))
+        elif ship == "1x2_vertical":
+            coordinates.append((row, col))
+            coordinates.append((row + 1, col))
+        elif ship == "1x2_horizontal":
+            coordinates.append((row, col))
+            coordinates.append((row, col + 1))
+        elif ship == "1x1":
+            coordinates.append((row, col))
+        return coordinates
+
+
+    def update_empty_cells_values(self, coordinates):
+        for i in range(len(coordinates)):
+            row, col = coordinates[i]
+            for empty_cell in self.empty_cells_values:
+                if empty_cell[0] == row and empty_cell[1] == col:
+                    self.empty_cells_values.remove(empty_cell)
+                    temp = list(empty_cell)
+                    temp[2] = temp[2] + 1
+                    self.empty_cells_values.append(tuple(temp))
+                    break
+        self.empty_cells_values.sort(key=lambda x: x[2])
 
 
     def goal_test(self, state: BimaruState):
@@ -937,7 +1071,13 @@ if __name__ == "__main__":
     board, remaining_pieces, row_hints, col_hints, unfinished_hints, remaining_ships = Board.parse_instance()
     first_board = copy.deepcopy(board)
     # Criar uma instância do problema Bimaru,
-    problem = Bimaru(copy.deepcopy(board), remaining_pieces, row_hints, col_hints, unfinished_hints, remaining_ships)
+    empty_cells_values = []
+    for i in range(10):
+        for j in range(10):
+            if(board[i][j] == ''):
+                empty_cells_values.append((i, j, 0))
+    problem = Bimaru(copy.deepcopy(board), remaining_pieces, row_hints, col_hints, unfinished_hints, remaining_ships, empty_cells_values)
+
     # Usar uma técnica de procura para resolver a instância,
     # Retirar a solução a partir do nó resultante,
     goal_node = astar_search(problem)
