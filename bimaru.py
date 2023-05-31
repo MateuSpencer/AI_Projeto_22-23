@@ -99,6 +99,19 @@ class Board:
         column = self.board[:, col_index]
         return np.count_nonzero((column == "T") | (column == "B") | (column == "L") | (column == "R") | (column == "C") | (column == "M"))
     
+    def get_smallest_row_col_remaining_pieces(self):
+        """for heuristic, returns the smalllest non zero number of remaining pieces remaining on a non completed row / column """
+        lowest = abs(self.row_pieces_placed(0) - self.bimaru.row_hints[0])
+        for index in range(10):
+            diff = abs(self.row_pieces_placed(index) - self.bimaru.row_hints[index])
+            if diff < lowest and diff != 0:
+                lowest = diff
+        for index in range(10):
+            diff = abs(self.col_pieces_placed(index) - self.bimaru.col_hints[index])
+            if diff < lowest and diff != 0:
+                lowest = diff
+        return lowest
+    
     def fill_water_around_hints(self):
         for i in range(10):
             row = i
@@ -927,7 +940,9 @@ class Bimaru(Problem):
         # for i in range(len(self.empty_cells_values)):
         #     row = self.empty_cells_values[i][0]
         #     col = self.empty_cells_values[i][1]
-        #     if sum(state.board.remaining_ships.values()) >= np.count_nonzero(state.board.board == ""): # if the number of pieces to place is larger than the number of empty cells, then place pieces 
+        #     if sum(state.board.remaining_ships.values()) >= np.count_nonzero(state.board.board == ""): # if the number of pieces to place is larger than the number of empty cells, then place pieces
+                    #Ta a ver o numero de barcos e nao pieces   --  mas se o numero de barcos for maior que o numero de celulas vazias, entao nao faz sentrido continuar, deviia ser ao contrario?
+                    # Isto assim parece que vai dar ao mesmo, poreque o resultado é também todas as possiveis colocações de barccos de 4, 3 etc. nas empty cells.
         #         if state.board.remaining_ships["1x4"] > 0:
         #             # try to plae a 1x4 ship vertivaly (topmost square on current cell)
         #             if state.board.check_place_1x4_vertical(row,col):
@@ -1063,7 +1078,7 @@ class Bimaru(Problem):
 
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
-        return (np.count_nonzero(node.state.board.board == "") + node.state.board.get_remaining_pieces())  #TODO: Would be faster if it kept a count
+        return (np.count_nonzero(node.state.board.board == "") + node.state.board.get_remaining_pieces()) #+ node.state.board.get_smallest_row_col_remaining_pieces()
 
 
 if __name__ == "__main__":
