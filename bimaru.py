@@ -322,10 +322,6 @@ class Board:
         if ((self.col_pieces_placed(col) + 1) > self.bimaru.col_hints[col]):
             return False # if adding 1 piece to this column exceeds the hint value, invalid placement
         
-        # Dont include this state if it won´t have enough empty cells to place the remaining pieces
-        if (self.board.get_empty_cells() - 1) < (self.board.get_remaining_pieces() - 1): 
-            # TODO: Must check if the empty cells of this state (também tem de contar com as aguas que possam ser inseridas)
-            return False
         
         return self.check_place_C(row, col)
 
@@ -941,6 +937,16 @@ class Bimaru(Problem):
             print("\n\n")
         
         
+        # Cut this branch if it won´t have enough empty cells to place the remaining pieces
+        if state.board.get_empty_cells() < state.board.get_remaining_pieces() : 
+            return actions
+        
+        # First Fill all Hints
+        if len(state.board.unfinished_hints) > 0:
+            actions = state.board.hint_actions()
+            return actions
+
+        
         # for empty_cell in self.empty_cells_values:
         #     empty_cell_row = empty_cell[0]
         #     empty_cell_col = empty_cell[1]
@@ -948,10 +954,6 @@ class Bimaru(Problem):
         #         self.empty_cells_values.remove(empty_cell)
         # self.empty_cells_values.sort(key=lambda x: x[2])
 
-        # First Fill all Hints
-        if len(state.board.unfinished_hints) > 0:
-            actions = state.board.hint_actions()
-            return actions
         
         # for i in range(len(self.empty_cells_values)):
         #     row = self.empty_cells_values[i][0]
