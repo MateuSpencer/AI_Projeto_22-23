@@ -17,6 +17,7 @@ from search import (
     breadth_first_tree_search,
     depth_first_tree_search,
     greedy_search,
+    iterative_deepening_search,
     recursive_best_first_search,
 )
 
@@ -152,7 +153,7 @@ class Board:
         remaining_ships = {"1x1": 4, "1x2": 3, "1x3": 2 , "1x4": 1}
         
         board = np.zeros((10, 10), dtype=str)
-        hint_counter = 0
+        hint_counter = -1
         unfinished_hints = []
         
         for line in sys.stdin:
@@ -182,6 +183,8 @@ class Board:
                     break
             elif parts[0].isdigit(): 
                 hint_counter = int(parts[0])
+                if hint_counter == 0:
+                    break
         return board, remaining_pieces, row_hints, col_hints, unfinished_hints, remaining_ships
 
 
@@ -915,13 +918,17 @@ class Bimaru(Problem):
         
         actions = []
         # TODO: Debug
-        # print("\n\n")
-        # print("CHOSEN STATE ID:", state.id)
-        # count = np.count_nonzero(state.board.board == "")
-        # print("Empty cells heuristic:", count)
-        # print(state.board.board)
-        # print("\n\n")
-
+        print("\n\n")
+        print("CHOSEN STATE ID:", state.id)
+        count = np.count_nonzero(state.board.board == "")
+        print("Empty cells heuristic:", count)
+        print(state.board.board)
+        print("\n\n")        
+        if(state.id <= 17):
+            print("\n\n")  
+            print("STOP : ", state.id)
+            print("\n\n")  
+        
         # for empty_cell in self.empty_cells_values:
         #     empty_cell_row = empty_cell[0]
         #     empty_cell_col = empty_cell[1]
@@ -1014,14 +1021,14 @@ class Bimaru(Problem):
         new_state.board.insert_ship(row, col, ship)
         
         # TODO: DEBUG
-        #print("State ID:", new_state.id)
-        #count = np.count_nonzero(new_state.board.board == "") + state.board.get_remaining_pieces()
-        #print("Empty cells heuristic:", count)
-        #print("Remaining Pieces:", new_state.board.get_remaining_pieces())
-        #print("Remaining Ships:", new_state.board.remaining_ships)
-        #print(new_state.board.board)
-        #print(action)
-        #print("\n\n")
+        print("State ID:", new_state.id)
+        count = np.count_nonzero(new_state.board.board == "") + state.board.get_remaining_pieces()
+        print("Empty cells heuristic:", count)
+        print("Remaining Pieces:", new_state.board.get_remaining_pieces())
+        print("Remaining Ships:", new_state.board.remaining_ships)
+        print(new_state.board.board)
+        print(action)
+        print("\n\n")
 
         return new_state
     
@@ -1078,7 +1085,12 @@ class Bimaru(Problem):
 
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
-        return (np.count_nonzero(node.state.board.board == "") + node.state.board.get_remaining_pieces()) #+ node.state.board.get_smallest_row_col_remaining_pieces()
+        empty_cells = np.count_nonzero(node.state.board.board == "")
+        return empty_cells + 2 * node.state.board.get_remaining_pieces()
+        #if empty_cells > 80:
+        #    return node.state.board.get_smallest_row_col_remaining_pieces()
+        #else:
+        #    return empty_cells + 2 * node.state.board.get_remaining_pieces()
 
 
 if __name__ == "__main__":
@@ -1095,7 +1107,7 @@ if __name__ == "__main__":
 
     # Usar uma técnica de procura para resolver a instância,
     # Retirar a solução a partir do nó resultante,
-    goal_node = astar_search(problem)
+    goal_node = greedy_search(problem)
     # Imprimir para o standard output no formato indicado.
     if goal_node != None:
         solved_board = np.where(goal_node.state.board.board  == 'W', '.', goal_node.state.board.board)
