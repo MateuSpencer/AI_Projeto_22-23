@@ -917,17 +917,22 @@ class Bimaru(Problem):
         partir do estado passado como argumento."""
         
         actions = []
+        empty_cells = np.count_nonzero(state.board.board == "")
+        
         # TODO: Debug
-        print("\n\n")
-        print("CHOSEN STATE ID:", state.id)
-        count = np.count_nonzero(state.board.board == "")
-        print("Empty cells heuristic:", count)
-        print(state.board.board)
-        print("\n\n")        
-        if(state.id <= 17):
-            print("\n\n")  
-            print("STOP : ", state.id)
-            print("\n\n")  
+        #print("\n\n")
+        #print("CHOSEN STATE ID:", state.id)
+        #print("Empty cells heuristic:", empty_cells)
+        #print(state.board.board)
+        #print("\n\n")        
+        #if(state.id <= 17):
+        #    print("\n\n")  
+        #    print("STOP : ", state.id)
+        #    print("\n\n")
+            
+        # Cut this branch if it doesn't have enough empty cells to place the remaining pieces
+        if  empty_cells < state.board.get_remaining_pieces():
+            return actions
         
         # for empty_cell in self.empty_cells_values:
         #     empty_cell_row = empty_cell[0]
@@ -1021,14 +1026,14 @@ class Bimaru(Problem):
         new_state.board.insert_ship(row, col, ship)
         
         # TODO: DEBUG
-        print("State ID:", new_state.id)
-        count = np.count_nonzero(new_state.board.board == "") + state.board.get_remaining_pieces()
-        print("Empty cells heuristic:", count)
-        print("Remaining Pieces:", new_state.board.get_remaining_pieces())
-        print("Remaining Ships:", new_state.board.remaining_ships)
-        print(new_state.board.board)
-        print(action)
-        print("\n\n")
+        #print("State ID:", new_state.id)
+        #count = np.count_nonzero(new_state.board.board == "")
+        #print("Empty cells heuristic:", count)
+        #print("Remaining Pieces:", new_state.board.get_remaining_pieces())
+        #print("Remaining Ships:", new_state.board.remaining_ships)
+        #print(new_state.board.board)
+        #print(action)
+        #print("\n\n")
 
         return new_state
     
