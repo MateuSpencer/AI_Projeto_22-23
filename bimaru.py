@@ -100,7 +100,7 @@ class Board:
         column = self.board[:, col_index]
         return np.count_nonzero((column == "T") | (column == "B") | (column == "L") | (column == "R") | (column == "C") | (column == "M"))
     
-    def get_smallest_row_col_remaining_pieces(self):
+    def get_smallest_row_col_remaining_pieces(self): # TODO: Remove if ot used
         """for heuristic, returns the smalllest non zero number of remaining pieces remaining on a non completed row / column """
         lowest = abs(self.row_pieces_placed(0) - self.bimaru.row_hints[0])
         for index in range(10):
@@ -191,6 +191,9 @@ class Board:
     def get_remaining_pieces(self):
         """Retorna o número de peças que ainda faltam colocar no tabuleiro."""
         return sum(self.remaining_pieces.values())
+    
+    def get_empty_cells(self):
+        return np.count_nonzero(self.board == "")
 
     """Check if specific piece can be placed in a specific position"""
     
@@ -318,6 +321,11 @@ class Board:
             return False # if adding 1 piece to this row  exceeds the hint value, invalid placement
         if ((self.col_pieces_placed(col) + 1) > self.bimaru.col_hints[col]):
             return False # if adding 1 piece to this column exceeds the hint value, invalid placement
+        
+        # Dont include this state if it won´t have enough empty cells to place the remaining pieces
+        if (self.board.get_empty_cells() - 1) < (self.board.get_remaining_pieces() - 1): 
+            # TODO: Must check if the empty cells of this state (também tem de contar com as aguas que possam ser inseridas)
+            return False
         
         return self.check_place_C(row, col)
 
@@ -917,22 +925,21 @@ class Bimaru(Problem):
         partir do estado passado como argumento."""
         
         actions = []
-        empty_cells = np.count_nonzero(state.board.board == "")
         
         # TODO: Debug
-        #print("\n\n")
-        #print("CHOSEN STATE ID:", state.id)
-        #print("Empty cells heuristic:", empty_cells)
-        #print(state.board.board)
-        #print("\n\n")        
-        #if(state.id <= 17):
-        #    print("\n\n")  
-        #    print("STOP : ", state.id)
-        #    print("\n\n")
-            
-        # Cut this branch if it doesn't have enough empty cells to place the remaining pieces
-        if  empty_cells < state.board.get_remaining_pieces():
-            return actions
+        print("\n\n")
+        print("CHOSEN STATE ID:", state.id)
+        print("Empty cells heuristic:", state.board.get_empty_cells())
+        print("Remaining Pieces:", state.board.get_remaining_pieces())
+        print("Remaining Ships:", state.board.remaining_ships)
+        print(state.board.board)
+        print("\n\n")
+        
+        if(state.id <= 17):
+            print("\n\n")  
+            print("STOP : ", state.id)
+            print("\n\n")
+        
         
         # for empty_cell in self.empty_cells_values:
         #     empty_cell_row = empty_cell[0]
@@ -946,9 +953,6 @@ class Bimaru(Problem):
             actions = state.board.hint_actions()
             return actions
         
-        # After placing all hints, try to place ships on empty cells
-            # Try to place a Ships (Horizontal and Vertical): 1x1, 1x2, 1x3, 1x4 (Centered on the topmost/left most piece)
-                # Start by placing first the bigger pieces and only then place the smaller ones
         # for i in range(len(self.empty_cells_values)):
         #     row = self.empty_cells_values[i][0]
         #     col = self.empty_cells_values[i][1]
@@ -981,6 +985,9 @@ class Bimaru(Problem):
         #             if state.board.check_place_1x1(row,col):
         #                 actions.append((row, col, "1x1", "empty", 1, 1))
 
+        # After placing all hints, try to place ships on empty cells
+            # Try to place a Ships (Horizontal and Vertical): 1x1, 1x2, 1x3, 1x4 (Centered on the topmost/left most piece)
+                # Start by placing first the bigger pieces and only then place the smaller ones
         for row in range(10):
             for col in range(10):
                 if state.board.get_value(row, col) == "":
@@ -1026,14 +1033,13 @@ class Bimaru(Problem):
         new_state.board.insert_ship(row, col, ship)
         
         # TODO: DEBUG
-        #print("State ID:", new_state.id)
-        #count = np.count_nonzero(new_state.board.board == "")
-        #print("Empty cells heuristic:", count)
-        #print("Remaining Pieces:", new_state.board.get_remaining_pieces())
-        #print("Remaining Ships:", new_state.board.remaining_ships)
-        #print(new_state.board.board)
-        #print(action)
-        #print("\n\n")
+        print("State ID:", new_state.id)
+        print("Empty cells heuristic:", state.board.get_empty_cells())
+        print("Remaining Pieces:", new_state.board.get_remaining_pieces())
+        print("Remaining Ships:", new_state.board.remaining_ships)
+        print(new_state.board.board)
+        print(action)
+        print("\n\n")
 
         return new_state
     
@@ -1090,7 +1096,7 @@ class Bimaru(Problem):
 
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
-        empty_cells = np.count_nonzero(node.state.board.board == "")
+        empty_cells = node.state.board.get_empty_cells()
         return empty_cells #+ 2 * node.state.board.get_remaining_pieces()
         #if empty_cells > 80:
         #    return node.state.board.get_smallest_row_col_remaining_pieces()
