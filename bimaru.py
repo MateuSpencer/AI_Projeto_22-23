@@ -1086,7 +1086,7 @@ class Bimaru(Problem):
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
         empty_cells = np.count_nonzero(node.state.board.board == "")
-        return empty_cells + 2 * node.state.board.get_remaining_pieces()
+        return empty_cells #+ 2 * node.state.board.get_remaining_pieces()
         #if empty_cells > 80:
         #    return node.state.board.get_smallest_row_col_remaining_pieces()
         #else:
