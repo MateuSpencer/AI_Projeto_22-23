@@ -100,18 +100,6 @@ class Board:
         column = self.board[:, col_index]
         return np.count_nonzero((column == "T") | (column == "B") | (column == "L") | (column == "R") | (column == "C") | (column == "M"))
     
-    def get_smallest_row_col_remaining_pieces(self): # TODO: Remove if ot used
-        """for heuristic, returns the smalllest non zero number of remaining pieces remaining on a non completed row / column """
-        lowest = abs(self.row_pieces_placed(0) - self.bimaru.row_hints[0])
-        for index in range(10):
-            diff = abs(self.row_pieces_placed(index) - self.bimaru.row_hints[index])
-            if diff < lowest and diff != 0:
-                lowest = diff
-        for index in range(10):
-            diff = abs(self.col_pieces_placed(index) - self.bimaru.col_hints[index])
-            if diff < lowest and diff != 0:
-                lowest = diff
-        return lowest
     
     def fill_water_around_hints(self):
         for i in range(10):
@@ -154,6 +142,7 @@ class Board:
         
         board = np.zeros((10, 10), dtype=str)
         hint_counter = -1
+        initial_hints = 0
         unfinished_hints = []
         
         for line in sys.stdin:
@@ -183,9 +172,10 @@ class Board:
                     break
             elif parts[0].isdigit(): 
                 hint_counter = int(parts[0])
+                initial_hints = hint_counter
                 if hint_counter == 0:
                     break
-        return board, remaining_pieces, row_hints, col_hints, unfinished_hints, remaining_ships
+        return board, remaining_pieces, row_hints, col_hints, initial_hints, unfinished_hints, remaining_ships
 
 
     def get_remaining_pieces(self):
@@ -520,6 +510,30 @@ class Board:
             if tuple[:4] == new_tuple[:4]:
                 return False #Exists already
         return True
+    
+    """Used to count the number of possible placements of all the pieces in a state
+    Used for Choosing the first action in an empty board"""
+    def all_possible_placements(self):
+        counter = 0
+        for row in range(10):
+            for col in range(10):
+                if self.get_value(row, col) == "": # Only tries to place a piece in an empty cell
+                    if self.check_place_1x1(row,col):
+                        counter += 1
+                    # try to plae a 1x2 ship vertivaly (topmost square on current cell)
+                    if self.check_place_1x2_vertical(row,col):
+                        counter += 1                    # try to plae a 1x2 ship horizontaly (leftmost square on current cell)
+                    if self.check_place_1x2_horizontal(row,col):
+                        counter += 1                    # try to plae a 1x3 ship vertivaly (topmost square on current cell)
+                    if self.check_place_1x3_vertical(row,col):
+                        counter += 1                    # try to plae a 1x3 ship horizontaly (leftmost square on current cell)
+                    if self.check_place_1x3_horizontal(row,col):
+                        counter += 1                    # try to plae a 1x4 ship vertivaly (topmost square on current cell)
+                    if self.check_place_1x4_vertical(row,col):
+                        counter += 1                    # try to plae a 1x4 ship horizontaly (leftmost square on current cell)
+                    if self.check_place_1x4_horizontal(row,col):
+                        counter += 1
+        return counter
     
     def hint_actions (self):
         actions = []
@@ -905,14 +919,15 @@ class Board:
 
 
 class Bimaru(Problem):
-    def __init__(self, board, remaining_pieces, row_hints, col_hints, unfinished_hints, remaining_ships, empty_cells_values):
+    def __init__(self, board, remaining_pieces, row_hints, col_hints, unfinished_hints, remaining_ships, initial_hints, empty_cells_values):
         """O construtor especifica o estado inicial."""
         # number of positions in the row / column with a ship cell
         self.row_hints = row_hints 
         self.col_hints = col_hints
+        self.initial_hints = initial_hints
+        self.empty_cells_values = empty_cells_values
         board_object = Board(board, remaining_pieces, unfinished_hints, remaining_ships, self) #Criar o Board inicial, passando o problema Bimaru para poder aceder às hints
         board_object.fill_water_around_hints() # Fill water around hints
-        self.empty_cells_values = empty_cells_values
         self.state = BimaruState(board_object)
         super().__init__(self.state)
 
@@ -923,18 +938,31 @@ class Bimaru(Problem):
         actions = []
         
         # TODO: Debug
-        print("\n\n")
-        print("CHOSEN STATE ID:", state.id)
-        print("Empty cells heuristic:", state.board.get_empty_cells())
-        print("Remaining Pieces:", state.board.get_remaining_pieces())
-        print("Remaining Ships:", state.board.remaining_ships)
-        print(state.board.board)
-        print("\n\n")
-        
-        if(state.id <= 17):
-            print("\n\n")  
-            print("STOP : ", state.id)
-            print("\n\n")
+        #if(state.id <= 17):
+        #    print("\n\n")  
+        #    print("NEW 1X4 PLACEMENT")
+        #    print("\n\n")  
+        #print("CHOSEN STATE ID:", state.id)
+        #
+        #if state.board.remaining_ships["1x4"] == 1:
+        #    print("------------ PLACING FIRST 1x4 -------------")
+        #elif state.board.remaining_ships["1x3"] == 2:
+        #    print("------------ PLACING FIRST 1x3 -------------")
+        #elif state.board.remaining_ships["1x3"] == 1:
+        #    print("------------ PLACING SECOND 1x3 -------------")
+        #elif state.board.remaining_ships["1x2"] == 3:
+        #    print("------------ PLACING FIRST 1x2 -------------")
+        #elif state.board.remaining_ships["1x2"] == 2:
+        #    print("------------ PLACING SECOND 1x2 -------------")
+        #elif state.board.remaining_ships["1x2"] == 1:
+        #    print("------------ PLACING THIRD 1x2 -------------")
+        #elif state.board.remaining_ships["1x1"] == 4:
+        #    print("------------ PLACING FIRST 1x -------------")
+        #
+        #print("Empty cells heuristic:", state.board.get_empty_cells())
+        #print("Remaining Pieces:", state.board.get_remaining_pieces())
+        #print("Remaining Ships:", state.board.remaining_ships)
+        #print(state.board.board)
         
         
         # Cut this branch if it won´t have enough empty cells to place the remaining pieces
@@ -1035,13 +1063,14 @@ class Bimaru(Problem):
         new_state.board.insert_ship(row, col, ship)
         
         # TODO: DEBUG
-        print("State ID:", new_state.id)
-        print("Empty cells heuristic:", state.board.get_empty_cells())
-        print("Remaining Pieces:", new_state.board.get_remaining_pieces())
-        print("Remaining Ships:", new_state.board.remaining_ships)
-        print(new_state.board.board)
-        print(action)
-        print("\n\n")
+        #print("Generated State ID:", new_state.id)
+        #print("Empty cells heuristic:", new_state.board.get_empty_cells())
+        #print("All possible placements:", new_state.board.all_possible_placements())
+        #print("Remaining Pieces:", new_state.board.get_remaining_pieces())
+        #print("Remaining Ships:", new_state.board.remaining_ships)
+        #print(new_state.board.board)
+        #print(action)
+        #print("\n\n")
 
         return new_state
     
@@ -1098,17 +1127,14 @@ class Bimaru(Problem):
 
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
+        # return node.state.board.all_possible_placements()
         empty_cells = node.state.board.get_empty_cells()
-        return empty_cells #+ 2 * node.state.board.get_remaining_pieces()
-        #if empty_cells > 80:
-        #    return node.state.board.get_smallest_row_col_remaining_pieces()
-        #else:
-        #    return empty_cells + 2 * node.state.board.get_remaining_pieces()
+        return empty_cells 
 
 
 if __name__ == "__main__":
     # Ler o ficheiro do standard input, 
-    board, remaining_pieces, row_hints, col_hints, unfinished_hints, remaining_ships = Board.parse_instance()
+    board, remaining_pieces, row_hints, col_hints, initial_hints, unfinished_hints, remaining_ships = Board.parse_instance()
     first_board = copy.deepcopy(board)
     # Criar uma instância do problema Bimaru,
     empty_cells_values = []
@@ -1116,7 +1142,7 @@ if __name__ == "__main__":
         for j in range(10):
             if(board[i][j] == ''):
                 empty_cells_values.append((i, j, 0))
-    problem = Bimaru(copy.deepcopy(board), remaining_pieces, row_hints, col_hints, unfinished_hints, remaining_ships, empty_cells_values)
+    problem = Bimaru(copy.deepcopy(board), remaining_pieces, row_hints, col_hints, unfinished_hints, remaining_ships, initial_hints, empty_cells_values)
 
     # Usar uma técnica de procura para resolver a instância,
     # Retirar a solução a partir do nó resultante,
