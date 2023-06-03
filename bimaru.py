@@ -514,7 +514,7 @@ class Board:
     """Used to count the number of possible placements of all the pieces in a state
     Used for Choosing the first action in an empty board
     The board with the most possible placements is the most desierable one"""
-    def all_possible_placements_heuristic(self):
+    def all_possible_placements_heuristic(self, total_possible_placements: int):
         counter = 0
         for row in range(10):
             for col in range(10):
@@ -533,12 +533,12 @@ class Board:
                         counter += 1
                     if self.check_place_1x4_horizontal(row,col):
                         counter += 1
-        # 700 is the maximum number of possible placements of each type of ships in an empty board
-        # So by subtracting from 700, the most desierable state (with more placements) is now the lowest
+        # total_possible_placements is the maximum number of possible placements of each type of ships in an empty board
+        # So by subtracting from total_possible_placements, the most desierable state (with more placements) is now the lowest
         # allowing it to be used as a heuristic, and will always be bigger than the number of empty cells (for this initial case)
         # So that our heuristic as a whole remains admissible
         # the heuristics for the states of the first placement are all bigger than the heuristics of the states branching ot from these
-        return 700 - counter
+        return total_possible_placements - counter
     
     def hint_actions (self):
         actions = []
@@ -1051,7 +1051,9 @@ class Bimaru(Problem):
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
         if node.state.board.bimaru.initial_hints == 0 and node.state.board.remaining_ships["1x3"] == 2:
-            return node.state.board.all_possible_placements_heuristic() # For choosing a placement of the first 1x4 on an empty board
+            return node.state.board.all_possible_placements_heuristic(700) # For choosing a placement of the first 1x4 on an initially empty board
+        if node.state.board.bimaru.initial_hints == 0 and node.state.board.remaining_ships["1x3"] == 1:
+            return node.state.board.all_possible_placements_heuristic(672) # For choosing a placement of the first 1x3 on an initially empty board
         empty_cells = node.state.board.get_empty_cells()
         return empty_cells 
 
