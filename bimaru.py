@@ -941,37 +941,6 @@ class Bimaru(Problem):
         
         actions = []
         
-        # TODO: Debug
-        #DEBUG = 0
-        #if DEBUG == 1:
-        #    if(state.id <= 17):
-        #        print("\n\n")  
-        #        print("NEW 1X4 PLACEMENT")
-        #        
-        #        print("CHOSEN STATE ID:", state.id)
-        #        
-        #        if state.board.remaining_ships["1x4"] == 1:
-        #            print("------------ PLACING FIRST 1x4 -------------")
-        #        elif state.board.remaining_ships["1x3"] == 2:
-        #            print("------------ PLACING FIRST 1x3 -------------")
-        #        elif state.board.remaining_ships["1x3"] == 1:
-        #            print("------------ PLACING SECOND 1x3 -------------")
-        #        elif state.board.remaining_ships["1x2"] == 3:
-        #            print("------------ PLACING FIRST 1x2 -------------")
-        #        elif state.board.remaining_ships["1x2"] == 2:
-        #            print("------------ PLACING SECOND 1x2 -------------")
-        #        elif state.board.remaining_ships["1x2"] == 1:
-        #            print("------------ PLACING THIRD 1x2 -------------")
-        #        elif state.board.remaining_ships["1x1"] == 4:
-        #            print("------------ PLACING FIRST 1x -------------")
-        #        
-        #        print("Empty cells heuristic:", state.board.get_empty_cells())
-        #        print("All possible placements:   -------------------- ", state.board.all_possible_placements_heuristic())
-        #        print("Remaining Pieces:", state.board.get_remaining_pieces())
-        #        print("Remaining Ships:", state.board.remaining_ships)
-        #        print(state.board.board)
-        
-        
         # Cut this branch if it won´t have enough empty cells to place the remaining pieces
         if state.board.get_empty_cells() < state.board.get_remaining_pieces() : 
             return actions
@@ -1025,18 +994,6 @@ class Bimaru(Problem):
         if type == "hint":
             new_state.board.unfinished_hints.remove((row_hint, col_hint))
         new_state.board.insert_ship(row, col, ship)
-        
-        # TODO: DEBUG
-        #DEBUG = 0
-        #if DEBUG == 1:
-        #    print("Generated State ID:", new_state.id)
-        #    print("Empty cells heuristic:", new_state.board.get_empty_cells())
-        #    print("All possible placements:   -------------------- ", new_state.board.all_possible_placements_heuristic())
-        #    print("Remaining Pieces:", new_state.board.get_remaining_pieces())
-        #    print("Remaining Ships:", new_state.board.remaining_ships)
-        #    print(new_state.board.board)
-        #    print(action)
-        #    print("\n\n")
 
         return new_state
 
